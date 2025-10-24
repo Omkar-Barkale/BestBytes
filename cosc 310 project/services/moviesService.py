@@ -1,15 +1,13 @@
 import sys
 from pathlib import Path
-
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-
 import uuid
 from typing import List, Dict, Any
 from fastapi import HTTPException
 
-from schemas.movie import movie
-from schemas.movieReviews import movieReviews  # assuming this is correct
-from repositories.itemsRepo import loadMetadata, loadReviews
+from schemas.movie import movie, movieCreate, movieUpdate, movieFilter
+from schemas.movieReviews import movieReviews, movieReviewsCreate
+from repositories.itemsRepo import loadMetadata, loadReviews, saveMetadata, saveReviews
 
 baseDir = Path(__file__).resolve().parents[1] / "data"
 
@@ -17,18 +15,172 @@ baseDir = Path(__file__).resolve().parents[1] / "data"
 def listMovies() -> List[movie]:
     if not baseDir.exists():
         return []
-    movies = []
+    movies: List[movie] = []
     for movieFolder in baseDir.iterdir():
         if movieFolder.is_dir():
             metadata = loadMetadata(movieFolder.name)
             reviews = loadReviews(movieFolder.name)
             if metadata:
                 movies.append(movie(**metadata, reviews=reviews))
-                print(f"Loaded movie: {movieFolder.name} -> {movies[-1]}")
+                #print(f"Loaded movie: {movieFolder.name} -> {movies[-1]}")
     return movies
 
-if __name__ == "__main__":
+"""if __name__ == "__main__":
     listMovies()
 
+"""
+def getMovieByName(title: str) -> movie:
+    movieDir = baseDir / title
+    if not movieDir.exists():
+        raise HTTPException(status_code = 404, detail = "Movie {Title} not found")
 
+
+    metadata = loadMetadata(title)
+    reviews = loadReviews(title)
+    if not metadata:
+        raise HTTPException(status_code=404, detail=f"No metadata for {title}")
+    
+    return movie(**metadata, reviews = reviews)
+
+def createMovie(payload: movieCreate) -> movie:
+    movieDir = baseDir / payload.title
+    if movieDir.exists:
+        raise HTTPException(status_code=409, detail=f"Movie {payload.title} already exists")
+    
+    saveMetadata(payload.title, payload.dict())
+    saveReviews(payload.title,[])
+    return movie(**payload.dict(), reviews = [])
+
+def updateMovie(title: str, payload: movieUpdate) -> movie:
+    """Update an existing movie's metadata."""
+    movieDir = baseDir / title
+    if not movieDir.exists():
+        raise HTTPException(status_code=404, detail=f"Movie '{title}' not found")
+
+    saveMetadata(title, payload.dict())
+    reviews = loadReviews(title)
+    return movie(**payload.dict(), reviews=reviews)
+
+
+def deleteMovie(title: str) -> None:
+    """Delete a movie folder and all its files."""
+    movieDir = baseDir / title
+    if not movieDir.exists():
+        raise HTTPException(status_code=404, detail=f"Movie '{title}' not found")
+
+    for file in movieDir.iterdir():
+        file.unlink()
+    movieDir.rmdir()
+
+
+def addReview(title: str, payload: movieReviewsCreate) -> movieReviews:
+    """Add a review to a movie's CSV file."""
+    movieDir = baseDir / title
+    if not movieDir.exists():
+        raise HTTPException(status_code=404, detail=f"Movie '{title}' not found")
+
+    reviews = loadReviews(title)
+    new_review = payload.dict()
+    reviews.append(new_review)
+    saveReviews(title, reviews)
+    return movieReviews(**new_review)
+
+
+def listMovies() -> List[movie]:
+    """Load all movies from the data directory without reviews (to avoid validation issues)."""
+    if not baseDir.exists():
+        return []
+
+    movies: List[movie] = []
+    for movieFolder in baseDir.iterdir():
+        if movieFolder.is_dir():
+            metadata = loadMetadata(movieFolder.name)
+            if metadata:
+                # Exclude reviews to avoid Pydantic errors
+                movies.append(movie(**{k: v for k, v in metadata.items() if k != "reviews"}, reviews=[]))
+    return movies
+
+
+def searchMovies(filters: movieFilter) -> List[movie]:
+    """Filter movies based on metadata only (ignoring reviews)."""
+    if not baseDir.exists():
+        return []
+
+    results: List[movie] = []
+
+    for movieFolder in baseDir.iterdir():
+        if not movieFolder.is_dir():
+            continue
+
+        metadata = loadMetadata(movieFolder.name)
+        if not metadata:
+            continue
+
+        # Build movie object without reviews
+        m = movie(**{k: v for k, v in metadata.items() if k != "reviews"}, reviews=[])
+        include = True
+
+        # --- Title ---
+        if filters.title and filters.title.lower() not in m.title.lower():
+            include = False
+
+        # --- Genres ---
+        if getattr(filters, "genres", None):
+            if not any(
+                g.lower() in [mg.lower() for mg in m.movieGenres] for g in filters.genres
+            ):
+                include = False
+
+        # --- Directors ---
+        if getattr(filters, "directors", None):
+            if not any(
+                d.lower() in [md.lower() for md in m.directors] for d in filters.directors
+            ):
+                include = False
+
+        # --- IMDb Rating ---
+        if filters.min_rating is not None and m.movieIMDbRating < filters.min_rating:
+            include = False
+        if filters.max_rating is not None and m.movieIMDbRating > filters.max_rating:
+            include = False
+
+        # --- Year ---
+        if filters.year and str(filters.year) not in m.datePublished:
+            include = False
+
+        if include:
+            results.append(m)
+
+    return results
+
+
+   
+
+# -----------------------------------------------
+#  Quick terminal test for movie search function
+# -----------------------------------------------
+
+if __name__ == "__main__":
+    all_movies = listMovies()
+    print(f"Loaded {len(all_movies)} movies from data directory.\n")
+
+    print("🎬 Movies directed by Christopher Nolan:")
+    f = movieFilter(directors=["Christopher Nolan"])
+    for m in searchMovies(f):
+        print(" -", m.title)
+
+    print("\n🔥movies rated above 8.5:")
+    f = movieFilter(min_rating=8.5)
+    for m in searchMovies(f):
+        print(" -", m.title)
+
+    print("\n📅 Movies released in 2019:")
+    f = movieFilter(year=2019)
+    for m in searchMovies(f):
+        print(" -", m.title)
+
+    print("\n🔎 Movies containing 'Knight':")
+    f = movieFilter(title="Knight")
+    for m in searchMovies(f):
+        print(" -", m.title)
 

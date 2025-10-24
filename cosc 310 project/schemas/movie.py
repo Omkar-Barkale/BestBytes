@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
+from .movieReviews import movieReviews
 
 class movie(BaseModel):
     title: str
@@ -14,6 +15,7 @@ class movie(BaseModel):
     creators: List[str]
     mainStars: List[str]
     description: str = Field(..., max_length=500)
+    reviews: List[movieReviews] = []
 
 class movieCreate(BaseModel):
     title: str
@@ -45,8 +47,8 @@ class movieUpdate(BaseModel):
 
 class movieFilter(BaseModel):
     title: Optional[str] = None
-    genre: Optional[str] = None
-    director: Optional[str] = None
+    genres: Optional[List[str]] = None
+    directors: Optional[List[str]] = None
     min_rating: Optional[float] = None
     max_rating: Optional[float] = None
     year: Optional[int] = None
