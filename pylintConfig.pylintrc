@@ -6,8 +6,9 @@ function-naming-style=camelCase
 argument-naming-style=camelCase
 
 
+
 [MESSAGES CONTROL]
-disable=C0114
+disable=C0114, C0116
 enable  =W0611 
 
 [FORMAT]
