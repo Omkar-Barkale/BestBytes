@@ -5,6 +5,7 @@ variable-naming-style = camelCase
 function-naming-style = camelCase
 argument-naming-style = camelCase
 module-naming-style = camelCase
+class-naming-style = camelCase
 
 
 
@@ -23,4 +24,4 @@ max-args = 6
 ignore-comments=yes
 
 [REPORTS]
-reports = yes
+reports = no
