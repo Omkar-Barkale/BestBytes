@@ -1,0 +1,27 @@
+[MASTER]
+fail-under=8.0
+ignore = myenv
+variable-naming-style = camelCase
+function-naming-style = camelCase
+argument-naming-style = camelCase
+module-naming-style = camelCase
+class-naming-style = camelCase
+
+
+
+[MESSAGES CONTROL]
+disable = C0114, C0116,C0411,C0115,R0903,C0410
+enable = W0611 
+
+[FORMAT]
+max-line-length = 200
+
+[DESIGN]
+max-args = 6
+
+
+[SIMILARITIES]
+ignore-comments=yes
+
+[REPORTS]
+reports = no
