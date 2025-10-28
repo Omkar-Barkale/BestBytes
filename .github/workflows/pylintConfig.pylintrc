@@ -3,13 +3,18 @@ fail-under=8.0
 ignore = myenv
 
 [MESSAGES CONTROL]
+disable=C0114
+enable=W0611 
 
 [FORMAT]
 max-line-length = 200
 
 [DESIGN]
+max-args = 6
+
 
 [SIMILARITIES]
+ignore-comments=yes
 
 [REPORTS]
 reports = no
