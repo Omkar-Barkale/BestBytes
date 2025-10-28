@@ -4,7 +4,7 @@ ignore = myenv
 
 [MESSAGES CONTROL]
 disable=C0114
-enable=W0611 
+enable  =W0611 
 
 [FORMAT]
 max-line-length = 200
