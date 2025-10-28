@@ -1,6 +1,10 @@
 [MASTER]
 fail-under=8.0
 ignore = myenv
+variable-naming-style=camelCase
+function-naming-style=camelCase
+argument-naming-style=camelCase
+
 
 [MESSAGES CONTROL]
 disable=C0114
