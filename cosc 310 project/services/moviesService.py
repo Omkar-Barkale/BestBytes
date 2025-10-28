@@ -9,14 +9,14 @@ from schemas.movie import movie, movieCreate, movieUpdate, movieFilter
 from schemas.movieReviews import movieReviews, movieReviewsCreate
 from repositories.itemsRepo import loadMetadata, loadReviews, saveMetadata, saveReviews
 
-baseDir = Path(__file__).resolve().parents[1] / "data"
+baseDir = Path(__file__).resolve().parents[1] / "data" # basDir is now pointing to data folder 
 
 #creates a movies list and adds reviews to each 
 def listMovies() -> List[movie]:
-    if not baseDir.exists():
+    if not baseDir.exists(): #checks if data folder exists
         return []
-    movies: List[movie] = []
-    for movieFolder in baseDir.iterdir():
+    movies: List[movie] = [] #will hold movie objects
+    for movieFolder in baseDir.iterdir(): #returns iterator over all items in data/
         if movieFolder.is_dir():
             metadata = loadMetadata(movieFolder.name)
             reviews = loadReviews(movieFolder.name)
@@ -30,8 +30,8 @@ def listMovies() -> List[movie]:
 
 """
 def getMovieByName(title: str) -> movie:
-    movieDir = baseDir / title
-    if not movieDir.exists():
+    movieDir = baseDir / title #create /data/movie name dir
+    if not movieDir.exists(): # checls if movieDir exists
         raise HTTPException(status_code = 404, detail = "Movie {Title} not found")
 
 
@@ -43,12 +43,12 @@ def getMovieByName(title: str) -> movie:
     return movie(**metadata, reviews = reviews)
 
 def createMovie(payload: movieCreate) -> movie:
-    movieDir = baseDir / payload.title
-    if movieDir.exists:
+    movieDir = baseDir / payload.title #creates path for new movie title
+    if movieDir.exists():
         raise HTTPException(status_code=409, detail=f"Movie {payload.title} already exists")
     
-    saveMetadata(payload.title, payload.dict())
-    saveReviews(payload.title,[])
+    saveMetadata(payload.title, payload.dict()) #creates movie folder if it doesnt exists and metadata.json
+    saveReviews(payload.title,[])#creates Moviereviews.csv
     return movie(**payload.dict(), reviews = [])
 
 def updateMovie(title: str, payload: movieUpdate) -> movie:
@@ -86,30 +86,16 @@ def addReview(title: str, payload: movieReviewsCreate) -> movieReviews:
     return movieReviews(**new_review)
 
 
-def listMovies() -> List[movie]:
-    """Load all movies from the data directory without reviews (to avoid validation issues)."""
-    if not baseDir.exists():
-        return []
-
-    movies: List[movie] = []
-    for movieFolder in baseDir.iterdir():
-        if movieFolder.is_dir():
-            metadata = loadMetadata(movieFolder.name)
-            if metadata:
-                # Exclude reviews to avoid Pydantic errors
-                movies.append(movie(**{k: v for k, v in metadata.items() if k != "reviews"}, reviews=[]))
-    return movies
-
 
 def searchMovies(filters: movieFilter) -> List[movie]:
-    """Filter movies based on metadata only (ignoring reviews)."""
+    """Filter movies based on metadata only (ignoring reviews for now)."""
     if not baseDir.exists():
         return []
 
     results: List[movie] = []
 
     for movieFolder in baseDir.iterdir():
-        if not movieFolder.is_dir():
+        if not movieFolder.is_dir(): #iterates through list
             continue
 
         metadata = loadMetadata(movieFolder.name)
@@ -117,17 +103,17 @@ def searchMovies(filters: movieFilter) -> List[movie]:
             continue
 
         # Build movie object without reviews
-        m = movie(**{k: v for k, v in metadata.items() if k != "reviews"}, reviews=[])
-        include = True
+        m = movie(**{k: v for k, v in metadata.items() if k != "reviews"}, reviews=[]) #creates movie object without reviews
+        include = True#included in list until proven otherwise
 
         # --- Title ---
-        if filters.title and filters.title.lower() not in m.title.lower():
+        if filters.title and filters.title.lower() not in m.title.lower():#checks if title exists of if it's a substring
             include = False
 
         # --- Genres ---
         if getattr(filters, "genres", None):
             if not any(
-                g.lower() in [mg.lower() for mg in m.movieGenres] for g in filters.genres
+                g.lower() in [mg.lower() for mg in m.movieGenres] for g in filters.genres #list all movie genres, then check if any filter movie genres match
             ):
                 include = False
 
