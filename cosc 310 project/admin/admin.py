@@ -1,3 +1,4 @@
+import bcrypt
 import uuid
 import threading
 from datetime import datetime
@@ -5,7 +6,7 @@ from typing import Optional
 
 class admin:
     
-    #fcn assignPenalty
+    #class variables:
     
     # {movie_id: {"title": str, "addedBy": Admin}}
     # {review_id: {"movieId": str, "content": str, "user": User}}
@@ -24,22 +25,67 @@ class admin:
         self.role = "admin"
         self.createdAt = datetime.now()
         
+    _lock = threading.Lock() # thread safety so only one admin can modify stuff at a time
+        
     # admin class features:
     
-    # addMovie
-    def addMovie():
-        return
-    
-    # removeMovie
-    def removeMovie():
-        return
+    # assignPenalty
+    def assignPenalty(cls, userId: str, penalty: str, assignedBy: 'admin'):
+        with cls._lock:    # no one else edits penaltiesDb at the same time
+            cls.penaltiesDb[userId] = {
+                "penalty": penalty,
+                "assignedBy": assignedBy.username,
+                "timestamp": datetime.now()
+            }
+            print(f"The Penalty '{penalty}' is assigned to the user {userId} by {assignedBy.username}.")
+            return True
         
-    
+    # addMovie
+    def addMovie(cls, title: str, addedBy: 'admin'):
+        with cls._lock:
+            movieId = str(uuid.uuid4())
+            cls.moviesDb[movieId] = {
+                "title": title,
+                "addedBy": addedBy.username,
+                "addedAt": datetime.now()
+            }
+            print(f"The movie '{title}' was added by {addedBy.username}. \nTotal movies: {len(cls.moviesDb)}")
+            return movieId
+
+
+    # removeMovie
+    def removeMovie(cls, movieId: str, removedBy: 'admin'):
+        with cls._lock:
+            if movieId in cls.moviesDb:
+                movieTitle = cls.moviesDb[movieId]["title"]
+                del cls.moviesDb[movieId]
+                print(f"The movie title '{movieTitle}' was deleted by {removedBy.username}.")
+                return True
+            else:
+                print(f"The Movie Id {movieId} was not found.")
+
+
     # removeReview
-    def removeReview():
-        return
-    
+    def removeReview(cls, reviewId: str, deletedBy: 'admin'):
+        with cls._lock:
+            if reviewId in cls.reviewsDb:
+                del cls.reviewsDb[reviewId]
+                print(f" The review Id {reviewId} was deleted by {deletedBy.username}.")
+                return True
+            else:
+                print(f"The review Id {reviewId} was not found.")
+                return False
+
+
     # viewMovies
-    def viewMovies():
-        return
-    
+    def viewMovies(cls):
+        with cls._lock:
+            for movieId, details in cls.moviesDb.items():
+                print(f"{movieId}: {details['title']} \nThis was added by {details['addedBy']})")
+
+            
+    # viewPenalties
+    def viewPenalties(cls):
+        with cls._lock:
+            for userId, details in cls.penaltiesDb.items():
+                print(f"User {userId}: {details['penalty']} \nThis penalty was assigned by {details['assignedBy']})")
