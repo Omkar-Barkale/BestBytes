@@ -1,0 +1,15 @@
+[MASTER]
+fail-under=8.0
+ignore = myenv
+
+[MESSAGES CONTROL]
+
+[FORMAT]
+max-line-length = 200
+
+[DESIGN]
+
+[SIMILARITIES]
+
+[REPORTS]
+reports = no
