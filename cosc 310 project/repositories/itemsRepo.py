@@ -47,8 +47,8 @@ def saveReviews(movieName: str, reviews: List[Dict[str, str]]) -> None:
     elif path.exists():
         path.unlink()
 
-
-"""" just prints movies and reviews to file to ensure other methods work, careful the review files are very large
+#pylint: disable = W0105
+""" just prints movies and reviews to file to ensure other methods work, careful the review files are very large
 def printAllMovies():
     if not baseDir.exists():
         print("No movies found.")

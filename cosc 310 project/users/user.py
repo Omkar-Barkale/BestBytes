@@ -6,8 +6,8 @@ from typing import Optional
 from datetime import datetime, timedelta
 import threading
 
-
-class User:
+#pylint: disable = C0303
+class user:
     # Class variable to store all users (in production, use a database)
     usersDb = {}
     activeSessions = {}  # Store active user sessions with expiry
@@ -55,7 +55,7 @@ class User:
         if not re.match(emailPattern, email):
             return False
     
-    
+
     def encryptPassword(password: str) -> bytes:
         """Encrypt password using bcrypt"""
         if len(password) < 8:
