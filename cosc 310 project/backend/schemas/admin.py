@@ -1,8 +1,6 @@
-import bcrypt
 import uuid
 import threading
 from datetime import datetime
-from typing import Optional
 from backend.schemas.user import user
 
 
@@ -76,9 +74,9 @@ class admin(user):
                 del cls.reviewsDb[reviewId]
                 print(f" The review Id {reviewId} was deleted by {deletedBy.username}.")
                 return True
-            else:
-                print(f"The review Id {reviewId} was not found.")
-                return False
+            
+            print(f"The review Id {reviewId} was not found.")
+            return False
 
 
     # viewMovies
