@@ -3,8 +3,10 @@ import uuid
 import threading
 from datetime import datetime
 from typing import Optional
+from backend.schemas.user import user
 
-class admin:
+
+class admin(user):
     
     #class variables:
     
@@ -18,7 +20,9 @@ class admin:
 
     #initializing an admin acc
     
-    def __init__(self, username: str, email: str):
+    def __init__(self, username: str, email: str, password: str):
+        super().__init__(username, email, password)
+        
         self.id = str(uuid.uuid4())
         self.username = username
         self.email = email
