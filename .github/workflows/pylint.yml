@@ -20,4 +20,4 @@ jobs:
         pip install pylint
     - name: Analysing the code with pylint
       run: |
-        pylint "cosc 310 project" --ignore myenv --rcfile=pylintConfig.pylintrc
+        pylint $(git ls-files '*.py') --ignore myenv --rcfile=pylintConfig.pylintrc
