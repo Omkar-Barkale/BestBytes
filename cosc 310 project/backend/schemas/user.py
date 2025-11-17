@@ -6,10 +6,8 @@ from typing import Optional
 from datetime import datetime, timedelta
 import threading
 
-#pylint: disable = C0303
-class user:
 
-class User:
+class user:
     # Class variable to store all users (in production, use a database)
     usersDb = {}
     activeSessions = {}  # Store active user sessions with expiry
@@ -44,7 +42,7 @@ class User:
         """Validate username: 3-20 characters, alphanumeric only"""
         if len(username) < 3 or len(username) > 20:
             return False
-        elif username.isalnum():
+        if username.isalnum():
             return True
         else:
             return False
@@ -57,7 +55,6 @@ class User:
         if not re.match(emailPattern, email):
             return False
     
-
     
     def encryptPassword(password: str) -> bytes:
         """Encrypt password using bcrypt"""
@@ -92,7 +89,7 @@ class User:
             del cls.activeSessions[token]
     
     
-    def createAccount(cls, username: str, email: str, password: str) -> 'User':
+    def createAccount(cls, username: str, email: str, password: str) -> 'user':
         """Create a new user account"""
         with cls._lock:  # Thread-safe operation
             # Check if username already exists
@@ -155,7 +152,7 @@ class User:
             return False
     
 
-    def getCurrentUser(cls, sessionToken: str) -> Optional['User']:
+    def getCurrentUser(cls, sessionToken: str) -> Optional['user']:
         """Get currently logged-in user from session token"""
         with cls._lock:  # Thread-safe operation
             cls._cleanExpiredSessions()
