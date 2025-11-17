@@ -6,6 +6,8 @@ from typing import Optional
 from datetime import datetime, timedelta
 import threading
 
+#pylint: disable = C0303
+class user:
 
 class User:
     # Class variable to store all users (in production, use a database)
@@ -55,6 +57,7 @@ class User:
         if not re.match(emailPattern, email):
             return False
     
+
     
     def encryptPassword(password: str) -> bytes:
         """Encrypt password using bcrypt"""
