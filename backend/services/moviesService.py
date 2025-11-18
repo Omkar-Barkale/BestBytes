@@ -1,8 +1,7 @@
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-import uuid
-from typing import List, Dict, Any
+from typing import List
 from fastapi import HTTPException
 
 from schemas.movie import movie, movieCreate, movieUpdate, movieFilter
@@ -22,7 +21,7 @@ def listMovies() -> List[movie]:
             reviews = loadReviews(movieFolder.name)
             if metadata:
                 movies.append(movie(**metadata, reviews=reviews))
-                #print(f"Loaded movie: {movieFolder.name} -> {movies[-1]}")
+                print(f"Loaded movie: {movieFolder.name} -> {movies[-1]}")
     return movies
 
 """if __name__ == "__main__":
@@ -80,10 +79,10 @@ def addReview(title: str, payload: movieReviewsCreate) -> movieReviews:
         raise HTTPException(status_code=404, detail=f"Movie '{title}' not found")
 
     reviews = loadReviews(title)
-    new_review = payload.dict()
-    reviews.append(new_review)
+    newReview = payload.dict()
+    reviews.append(newReview)
     saveReviews(title, reviews)
-    return movieReviews(**new_review)
+    return movieReviews(**newReview)
 
 
 
