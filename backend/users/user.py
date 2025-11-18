@@ -7,8 +7,6 @@ from datetime import datetime, timedelta
 import threading
 
 #pylint: disable = C0303
-class user:
-
 class User:
     # Class variable to store all users (in production, use a database)
     usersDb = {}
