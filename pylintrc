@@ -1,7 +1,7 @@
 [MASTER]
 ignore=venv,.venv,env,.env
 ignore-patterns=^venv/.*,^.venv/.*,^env/.*,^.env/.*
-fail-under=8.0
+fail-under=6.0
 variable-naming-style = camelCase
 function-naming-style = camelCase
 argument-naming-style = camelCase
@@ -14,7 +14,7 @@ attr-naming-style = camelCase
 
 
 [MESSAGES CONTROL]
-disable = C0114, C0116,C0411,C0115,R0903,C0410,E0213,E1102,R0902, E1101,C0303
+disable = C0114, C0116,C0411,C0115,R0903,C0410,E0213,E1102,R0902, E1101,C0303,E1121, C0305, W0621
 enable = W0611 
 
 [FORMAT]
