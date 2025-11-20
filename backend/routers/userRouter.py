@@ -17,7 +17,7 @@ def registerUser(username: str, email: str, password: str):
             "verificationToken": newUser.verificationToken
         }
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 # verify email
 @router.post("/verify")
@@ -40,7 +40,7 @@ def loginUser(username: str, password: str):
         sessionToken = User.login(User, username=username, password=password)
         return {"message": "Login successful!", "sessionToken": sessionToken}
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 # logout user
 @router.post("/logout")
