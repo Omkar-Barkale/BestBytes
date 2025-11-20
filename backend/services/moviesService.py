@@ -24,10 +24,6 @@ def listMovies() -> List[movie]:
                 print(f"Loaded movie: {movieFolder.name} -> {movies[-1]}")
     return movies
 
-"""if __name__ == "__main__":
-    listMovies()
-
-"""
 def getMovieByName(title: str) -> movie:
     movieDir = baseDir / title #create /data/movie name dir
     if not movieDir.exists(): # checls if movieDir exists
@@ -138,34 +134,4 @@ def searchMovies(filters: movieFilter) -> List[movie]:
 
     return results
 
-
-   
-
-# -----------------------------------------------
-#  Quick terminal test for movie search function
-# -----------------------------------------------
-
-if __name__ == "__main__":
-    all_movies = listMovies()
-    print(f"Loaded {len(all_movies)} movies from data directory.\n")
-
-    print("🎬 Movies directed by Christopher Nolan:")
-    f = movieFilter(directors=["Christopher Nolan"])
-    for m in searchMovies(f):
-        print(" -", m.title)
-
-    print("\n🔥movies rated above 8.5:")
-    f = movieFilter(min_rating=8.5)
-    for m in searchMovies(f):
-        print(" -", m.title)
-
-    print("\n📅 Movies released in 2019:")
-    f = movieFilter(year=2019)
-    for m in searchMovies(f):
-        print(" -", m.title)
-
-    print("\n🔎 Movies containing 'Knight':")
-    f = movieFilter(title="Knight")
-    for m in searchMovies(f):
-        print(" -", m.title)
 
