@@ -3,6 +3,7 @@ from pathlib import Path
 from fastapi import HTTPException
 from unittest.mock import Mock, patch, MagicMock
 import sys
+import json
 
 # Adjust import path as needed - import the actual module
 import backend.services.moviesService as movieServices
@@ -13,7 +14,8 @@ from backend.services.moviesService import (
     updateMovie,
     deleteMovie,
     addReview,
-    searchMovies
+    searchMovies,
+    saveMovieList
 )
 from backend.schemas.movie import movieCreate, movieUpdate, movieFilter
 from backend.schemas.movieReviews import movieReviewsCreate
@@ -459,6 +461,40 @@ class TestSearchMovies:
             result = searchMovies(filters)
             assert result == []
 
+#Test for saveMovieList
+class TestSaveMovieList:
+        def testCreateMovieListForNewUser(self, mockBaseDir, tmp_path):
+            fakeMovieList =["Inception", "Spider-Man", "The Shining"]
+            #Create a mock test file to store the user's movie lists
+            movieLists = Path(mockBaseDir/"movieLists.json")
+            name = "test"
+            listName = "favourites"
+
+            data = {}
+
+
+            saveMovieList(fakeMovieList, name, listName, mockBaseDir)
+
+            assert movieLists.exists()
+
+            with open(movieLists, 'r') as jsonFile:
+                try:
+                    data = json.load(jsonFile)
+                except json.JSONDecodeError:
+                    data = {}
+            print(data[name][listName])
+            assert name in data
+            assert listName in data[name]
+            for movie in data[name][listName]:
+                assert movie in fakeMovieList
+                
+            print("Runs")
+
+        
+            
+            
+
+
 
 # Integration-style tests
 class TestIntegration:
@@ -500,3 +536,4 @@ class TestIntegration:
                 retrieved = getMovieByName("TestMovie")
                 assert retrieved.title == "TestMovie"
                 assert retrieved.movieIMDbRating == 7.5
+
