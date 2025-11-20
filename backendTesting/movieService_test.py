@@ -1,26 +1,15 @@
 import pytest
+import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock
-from fastapi import HTTPException
-
+from unittest.mock import mock_open, patch, MagicMock
 from backend.repositories import itemsRepo
-from backend.services.moviesService import (
-    listMovies,
-    getMovieByName,
-    createMovie,
-    updateMovie,
-    deleteMovie,
-    addReview,
-    searchMovies
-)
-from backend.schemas.movie import movie, movieCreate, movieUpdate, movieFilter
-from backend.schemas.movieReviews import movieReviewsCreate
+from backend.services import moviesService
 
 #pylint: disable = function-naming-style, method-naming-style
 
 
 def testListMoviesEmpty(tmp_path):
     with patch("backend.services.moviesService.baseDir", tmp_path):
-        result = listMovies()
+        result = moviesService.listMovies()
         assert result == []
 
