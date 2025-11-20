@@ -131,6 +131,12 @@ class user:
             if not user.isVerified:
                 raise ValueError("Please verify your email before logging in")
             
+            # Check penalty points
+            penalties = cls.getPenaltyPoints(user.id)
+            if penalties >= 3:
+                raise ValueError("Your account is locked due to excessive penalty points.")
+
+            
             # Create session token
             sessionToken = str(uuid.uuid4())
             cls.activeSessions[sessionToken] = (user, datetime.now())
