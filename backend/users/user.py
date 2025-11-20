@@ -48,8 +48,7 @@ class User:
         if self.checkEmail(email):
             self.email = email
         else:
-            print(email)
-            #raise ValueError("Invalid email address")
+            raise ValueError("Invalid email address")
         
         # Encrypt and set password
         self.passwordHash = self.encryptPassword(password)
