@@ -13,4 +13,3 @@ class penaltyPoints:
     
     def __repr__(self):
         return f"<penaltyPoints user={self.user.username}, points={self.points}, reason='{self.reason}'>"
-

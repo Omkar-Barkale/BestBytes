@@ -48,47 +48,4 @@ def saveReviews(movieName: str, reviews: List[Dict[str, str]]) -> None:
         path.unlink()
 
 
-"""" just prints movies and reviews to file to ensure other methods work, careful the review files are very large
-def printAllMovies():
-    if not baseDir.exists():
-        print("No movies found.")
-        return
 
-def printAllMovies():
-    if not baseDir.exists():
-        print("No movies found.")
-        return
-
-    for movieFolder in baseDir.iterdir():
-        if movieFolder.is_dir():
-            movieName = movieFolder.name
-            print(f"\n🎬 Movie: {movieName}")
-
-            metadata = loadMetadata(movieName)
-            if metadata:
-                print("📄 Metadata:")
-                for key, value in metadata.items():
-                    print(f"  {key}: {value}")
-            else:
-                print("📄 Metadata: Not found")
-
-            reviews = loadReviews(movieName)
-            if reviews:
-                print("📝 Reviews:")
-                for review in reviews:
-                    user = review.get("User", "Unknown")
-                    rating = review.get("User's Rating out of 10", "-")
-                    title = review.get("Review Title", "").strip()
-                    body = review.get("Review", "").strip()
-                    
-                    print(f"\n  🧑 User: {user}")
-                    print(f"  ⭐ Rating: {rating}/10")
-                    if title:
-                        print(f"  📌 Title: {title}")
-                    print(f"  🗒️ Review: {body[:300]}{'...' if len(body) > 300 else ''}")
-            else:
-                print("📝 Reviews: None")
-
-if __name__ == "__main__":
-    printAllMovies()
-"""
