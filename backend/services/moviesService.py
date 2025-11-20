@@ -10,24 +10,40 @@ from repositories.itemsRepo import loadMetadata, loadReviews, saveMetadata, save
 
 baseDir = Path(__file__).resolve().parents[1] / "data" # basDir is now pointing to data folder 
 
-#creates a movies list and adds reviews to each 
 def listMovies() -> List[movie]:
-    if not baseDir.exists(): #checks if data folder exists
+    """Return a list of all movies in the data folder, including their reviews."""
+    if not baseDir.exists():
         return []
-    movies: List[movie] = [] #will hold movie objects
-    for movieFolder in baseDir.iterdir(): #returns iterator over all items in data/
-        if movieFolder.is_dir():
+
+    movies: List[movie] = []
+
+    for movieFolder in baseDir.iterdir():
+        if not movieFolder.is_dir():
+            continue
+
+        # Safely load metadata
+        try:
             metadata = loadMetadata(movieFolder.name)
+        except Exception:
+            metadata = {}
+
+        # Skip folders with no metadata
+        if not metadata:
+            continue
+
+        # Safely load reviews
+        try:
             reviews = loadReviews(movieFolder.name)
-            if metadata:
-                movies.append(movie(**metadata, reviews=reviews))
-                print(f"Loaded movie: {movieFolder.name} -> {movies[-1]}")
+        except Exception:
+            reviews = []
+
+        # Only append if metadata has required fields
+        required_fields = ["title", "movieGenres", "directors", "movieIMDbRating", "datePublished"]
+        if all(field in metadata for field in required_fields):
+            movies.append(movie(**metadata, reviews=reviews))
+
     return movies
 
-"""if __name__ == "__main__":
-    listMovies()
-
-"""
 def getMovieByName(title: str) -> movie:
     movieDir = baseDir / title #create /data/movie name dir
     if not movieDir.exists(): # checls if movieDir exists
@@ -140,32 +156,3 @@ def searchMovies(filters: movieFilter) -> List[movie]:
 
 
    
-
-# -----------------------------------------------
-#  Quick terminal test for movie search function
-# -----------------------------------------------
-
-if __name__ == "__main__":
-    all_movies = listMovies()
-    print(f"Loaded {len(all_movies)} movies from data directory.\n")
-
-    print("🎬 Movies directed by Christopher Nolan:")
-    f = movieFilter(directors=["Christopher Nolan"])
-    for m in searchMovies(f):
-        print(" -", m.title)
-
-    print("\n🔥movies rated above 8.5:")
-    f = movieFilter(min_rating=8.5)
-    for m in searchMovies(f):
-        print(" -", m.title)
-
-    print("\n📅 Movies released in 2019:")
-    f = movieFilter(year=2019)
-    for m in searchMovies(f):
-        print(" -", m.title)
-
-    print("\n🔎 Movies containing 'Knight':")
-    f = movieFilter(title="Knight")
-    for m in searchMovies(f):
-        print(" -", m.title)
-
