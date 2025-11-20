@@ -34,7 +34,7 @@ class User:
                     data = {}
 
         
-        print(data)
+      
         # Validate and set username
         if self.checkUsername(username):
             if username in data:
