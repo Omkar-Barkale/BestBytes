@@ -167,3 +167,8 @@ class user:
                     del cls.activeSessions[sessionToken]
             return None
     
+    def getPenaltyPoints(cls, userId: str) -> int:
+        from backend.schemas.admin import admin
+        if userId not in admin.penaltiesDb:
+            return 0
+        return sum(p["points"] for p in admin.penaltiesDb[userId])

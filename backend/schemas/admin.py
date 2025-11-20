@@ -32,15 +32,24 @@ class admin(user):
     # admin class features:
     
     # assignPenalty
-    def assignPenalty(cls, userId: str, penalty: str, assignedBy: 'admin'):
-        with cls._lock:    # no one else edits penaltiesDb at the same time
-            cls.penaltiesDb[userId] = {
-                "penalty": penalty,
+    def assignPenalty(cls, userId: str, points: int, reason: str, assignedBy: 'admin'):
+        with cls._lock:
+            if userId not in cls.penaltiesDb:
+                cls.penaltiesDb[userId] = []
+
+            cls.penaltiesDb[userId].append({
+                "points": points,
+                "reason": reason,
                 "assignedBy": assignedBy.username,
                 "timestamp": datetime.now()
-            }
-            print(f"The Penalty '{penalty}' is assigned to the user {userId} by {assignedBy.username}.")
+            })
+        
+            print(
+                f"{points} penalty points assigned to {userId} by {assignedBy.username}. "
+                f"Reason: {reason}"
+            )
             return True
+
         
     # addMovie
     def addMovie(cls, title: str, addedBy: 'admin'):
