@@ -153,6 +153,7 @@ def saveMovieList(list : List[movie], user: str, listName: str, path: Path):
         data[user] = {}
 
     data[user][listName] = list
+
     with open(path, 'w') as jsonFile:
         json.dump(data,jsonFile)
         jsonFile.close()
