@@ -104,5 +104,19 @@ def test_login_blocked_with_more_than_3_penalties():
     with pytest.raises(ValueError, match="too many penalty points"):
         User.login(blocked_user.username, pswd)
         
-        
+def test_create_account_success():
+    username = "newuser1"
+    email = "newuser1@example.com"
+    password = "StrongPass123!"
+
+    # Create account (user object) in memory only and not saving to a JSON file
+    user = User(username, email, password, save=False)
+
+    assert user.username == username
+    assert user.email == email
+    assert isinstance(user.passwordHash, bytes)
+    assert user.isVerified is False   # default
+    assert user.penaltyPoints == []   # starts empty
+
+
         
