@@ -48,7 +48,7 @@ class User:
             return False
     
     
-    def checkEmail(email: str) -> bool:
+    def checkEmail(self, email: str) -> bool:
         """Validate email format and check if domain has MX records"""
         # Basic email format validation
         emailPattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
