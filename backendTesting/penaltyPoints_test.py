@@ -4,7 +4,7 @@ from backend.users.user import User
 
 
 def test_penalty_point_creation():
-    user = User("xyz", "xyz.@example.com", "@passpass123")
+    user = User("xyz", "xyz@example.com", "@passpass123", save=False)
     reason = "Late submission"
 
     pp = PenaltyPoints(points=2, user=user, reason=reason)
@@ -21,7 +21,7 @@ def test_penalty_point_creation():
 
 
 def test_penalty_point_date_is_set():
-    user = User("xyz", "xyz@example.com", "@passpass123")
+    user = User("xyz", "xyz@example.com", "@passpass123", save=False)
 
     before = datetime.datetime.now()
     pp = PenaltyPoints(points=1, user=user, reason="Test reason")
@@ -32,7 +32,7 @@ def test_penalty_point_date_is_set():
 
 
 def test_penalty_point_multiple_creations_have_different_timestamps():
-    user = User("xyz", "xyz@example.com", "@passpass123")
+    user = User("xyz", "xyz@example.com", "@passpass123", save=False)
 
     pp1 = PenaltyPoints(points=1, user=user, reason="Reason 1")
     pp2 = PenaltyPoints(points=1, user=user, reason="Reason 2")
