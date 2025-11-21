@@ -1,5 +1,5 @@
 import datetime
-from backend.schemas.penaltyPoints import PenaltyPoint
+from backend.users.penaltyPoints import PenaltyPoint
 from backend.users.user import User
 
 
