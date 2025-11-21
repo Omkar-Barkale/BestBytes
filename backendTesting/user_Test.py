@@ -147,7 +147,7 @@ def test_create_account_duplicate_username():
 
     # Second account with same username should fail
     with pytest.raises(ValueError, match="(?i)username already exists"):
-        User.createAccoun
+        User.createAccount(username, email2, password)
 
 
 
