@@ -103,6 +103,7 @@ def test_login_blocked_with_more_than_3_penalties():
 
     with pytest.raises(ValueError, match="too many penalty points"):
         User.login(blocked_user.username, pswd)
+
         
 def test_create_account_success():
     username = "newuser1"
@@ -116,7 +117,8 @@ def test_create_account_success():
     assert user.email == email
     assert isinstance(user.passwordHash, bytes)
     assert user.isVerified is False   # default
-    assert user.penaltyPoints == []   # starts empty
+    assert user.penaltyPointsList == []   # starts empty
+
 
 # test fcn for login failure
 def test_login_fails_not_verified():
@@ -128,11 +130,11 @@ def test_login_fails_not_verified():
     user.isVerified = False
     User.usersDb[user.username] = user
 
-    with pytest.raises(ValueError, match="email not verified"):
+    with pytest.raises(ValueError, match="verify your email"):
         User.login(username, password)
 
 
-#test fcn for duplicate account creation
+# test fcn for duplicate account creation
 def test_create_account_duplicate_username():
     username = "duplicateUser"
     email1 = "duplicate1@example.com"
@@ -144,9 +146,8 @@ def test_create_account_duplicate_username():
     User.usersDb[user1.username] = user1
 
     # Second account with same username should fail
-    with pytest.raises(ValueError, match="username already exists"):
-        User.createAccount(username, email2, password)
+    with pytest.raises(ValueError, match="(?i)username already exists"):
+        User.createAccoun
 
 
 
-        
