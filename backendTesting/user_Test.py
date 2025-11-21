@@ -48,7 +48,7 @@ class encryptPassword(TestCase):
 
 # logging in with less than 3 penalty points check
 def test_login_allowed_with_fewer_than_3_penalties():
-    user = User(name, email, pswd, save=False)
+    user = User.createAccount(name, email, pswd)
     
     # Add 2 penalty points
     PenaltyPoints(1, user, "Reason 1")
@@ -59,9 +59,9 @@ def test_login_allowed_with_fewer_than_3_penalties():
     assert token is not None
 
 
-# logging in with greater than or equal to 3 penalty points check
+# logging in with >= 3 penalty points check
 def test_login_blocked_with_more_than_3_penalties():
-    user = User(name + "_blocked", "blocked_" + email, pswd, save=False)
+    user = User.createAccount("testblocked", "blocked_" + email, pswd)
     
     # Add more than 3 penalty points
     PenaltyPoints(1, user, "Reason 1")
@@ -72,8 +72,7 @@ def test_login_blocked_with_more_than_3_penalties():
     
     # Should raise ValueError because points >= 3
     with pytest.raises(ValueError, match="Account blocked"):
-        user.login(name + "_blocked", pswd)
-
+        user.login("testblocked", pswd)
 
     
 
