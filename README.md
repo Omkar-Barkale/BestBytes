@@ -10,5 +10,7 @@ Khushi's edit
 Prashaant's edit
 
 
-docker build -t backend
+docker build -t bestbytes-backend .
+
+
 uvicorn backend.app:app --reload
