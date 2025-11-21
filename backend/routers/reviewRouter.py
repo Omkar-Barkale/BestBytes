@@ -1,7 +1,9 @@
 import os
+import json
 from fastapi import APIRouter, HTTPException
 from typing import List
-from schemas.movieReviews import movieReviews, movieReviewsUpdate
+from schemas.movie import movie
+from schemas.movieReviews import movieReviews,movieReviewsCreate ,movieReviewsUpdate
 
 router = APIRouter()
 
