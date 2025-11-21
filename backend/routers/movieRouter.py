@@ -71,7 +71,7 @@ def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str):
         raise HTTPException(status_code=404, detail=f"Movie '{title}' not found")
 
     # CHECK: Review title and text are not empty
-    if not review_data.reviewTitle.strip() or not review_data.reviewText.strip():
+    if not review_data.reviewTitle.strip() or not review_data.review.strip():
         raise HTTPException(status_code=400, detail="Review title and text cannot be empty")
     
     # CHECK: Prevent duplicate review by same user for the same movie

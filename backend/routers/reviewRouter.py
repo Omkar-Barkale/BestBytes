@@ -99,7 +99,7 @@ def deleteReview(title: str, index: int, sessionToken: str):
     # Allow deletion if current_user is the creator or is an admin
     if (current_user.username.lower() != review_to_remove.user.lower() 
             and getattr(current_user, "role", None) != "admin"):
-        raise HTTPException(status_code=403, detail="You can't delete this review")
+        raise HTTPException(status_code=403, detail="You can't delete others' reviews")
    
     removed = reviews.pop(index)
     movieReviews_memory[title.lower()] = reviews
