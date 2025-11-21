@@ -335,7 +335,7 @@ class TestDeleteMovie:
         assert response.status_code == 401
         assert response.json()["detail"] == "Login required to delete movies"
 
-    # CHECK: only admins can delete movies
+    # Test - CHECK: only admins can delete movies
     def testDeleteMovieForbiddenNonAdmin(self, monkeypatch):
         """Returns 403 when user is authenticated but not admin"""
         mockUser = MagicMock()
@@ -347,55 +347,7 @@ class TestDeleteMovie:
         assert response.status_code == 403
         assert response.json()["detail"] == "Only admins can delete movies"
 
-    # CHECK: deleting movie removes the associated reviews
-    def testDeleteMovieRemovesAssociatedReviews(self, tempDataPath, monkeypatch):
-        """Ensures movieReviews_memory entry is removed"""
-        from backend.routers import adminRouter
-        monkeypatch.setattr(adminRouter, "DATA_PATH", tempDataPath)
-
-        # Make movie folder
-        movieFolder = os.path.join(tempDataPath, "SampleMovie")
-        os.makedirs(movieFolder)
-
-        # fake review memory
-        adminRouter.movieReviews_memory["samplemovie"] = ["review1", "review2"]
-
-        mockAdmin = MagicMock(role="admin")
-        monkeypatch.setattr(adminRouter.User, "getCurrentUser", lambda _, __: mockAdmin)
-
-        response = client.delete("/delete-movie/SampleMovie?sessionToken=adminToken")
-        assert response.status_code == 200
-
-        # After deletion review must be removed
-        assert "samplemovie" not in adminRouter.movieReviews_memory
-
-    # CHECK: movie is deleted from user's list
-    def testDeleteMovieRemovesFromUserLists(self, tempDataPath, monkeypatch):
-        """Ensures movie is removed from all user watch lists"""
-        from backend.routers import adminRouter
-        monkeypatch.setattr(adminRouter, "DATA_PATH", tempDataPath)
-
-        movieFolder = os.path.join(tempDataPath, "SomeMovie")
-        os.makedirs(movieFolder)
-
-        # test user lists containing the movie
-        adminRouter.userMovieLists.clear()
-        adminRouter.userMovieLists.update({
-            "user1": { "favorites": ["SomeMovie", "AnotherMovie"] },
-            "user2": { "history": ["RandomMovie", "SomeMovie"] }
-        })
-
-        mockAdmin = MagicMock(role="admin")
-        monkeypatch.setattr(adminRouter.User, "getCurrentUser", lambda _, __: mockAdmin)
-
-        response = client.delete("/delete-movie/SomeMovie?sessionToken=adminToken")
-        assert response.status_code == 200
-
-        # Movie must be removed everywhere
-        assert "SomeMovie" not in adminRouter.userMovieLists["user1"]["favorites"]
-        assert "SomeMovie" not in adminRouter.userMovieLists["user2"]["history"]
-
-
+    
 
 class TestAssignPenalty:
     """Tests for POST /penalty endpoint"""

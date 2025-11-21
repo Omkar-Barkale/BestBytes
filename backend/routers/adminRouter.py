@@ -60,14 +60,7 @@ def deleteMovie(title: str, sessionToken: str):
             os.remove(os.path.join(folderPath, fileName))
         os.rmdir(folderPath)
         
-        # CHECK: Remove associated reviews
-        movieReviews_memory.pop(title.lower(), None)
-
-        # CHECK: Remove movie from all user lists
-        for lists in userMovieLists.values():
-            for movie_list in lists.values():
-                if title in movie_list:
-                    movie_list.remove(title)
+        
 
         return {"message": f"Movie '{title}' deleted successfully."}
     except PermissionError:
