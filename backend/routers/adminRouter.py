@@ -23,14 +23,20 @@ def addMovie(movieData: movieCreate, sessionToken: Optional[str] = Query(None)):
     if os.path.exists(folderPath):
         raise HTTPException(status_code=400, detail="Movie already exists")
 
-    os.makedirs(folderPath, exist_ok=True)
-    metadataPath = os.path.join(folderPath, "metadata.json")
+    try:
+        os.makedirs(folderPath, exist_ok=True)
+        metadataPath = os.path.join(folderPath, "metadata.json")
 
-    with open(metadataPath, "w", encoding="utf-8") as f:
-        json.dump(movieData.dict(), f, indent=4)
+        with open(metadataPath, "w", encoding="utf-8") as f:
+            json.dump(movieData.model_dump(), f, indent=4)  # Use model_dump() instead of dict() more robust in this case
 
-    return {"message": f"Movie '{movieData.title}' added successfully."}
-
+        return {"message": f"Movie '{movieData.title}' added successfully."}
+    except PermissionError:
+        raise HTTPException(status_code=500, detail="Permission denied: Unable to create movie folder")
+    except IOError as e:
+        raise HTTPException(status_code=500, detail=f"IO error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 # delete movie
 @router.delete("/delete-movie/{title}")
 def deleteMovie(title: str, sessionToken: Optional[str] = Query(None)):
@@ -42,11 +48,18 @@ def deleteMovie(title: str, sessionToken: Optional[str] = Query(None)):
     if not os.path.exists(folderPath):
         raise HTTPException(status_code=404, detail="Movie not found")
 
-    for fileName in os.listdir(folderPath):
-        os.remove(os.path.join(folderPath, fileName))
-    os.rmdir(folderPath)
+    try:
+        for fileName in os.listdir(folderPath):
+            os.remove(os.path.join(folderPath, fileName))
+        os.rmdir(folderPath)
 
-    return {"message": f"Movie '{title}' deleted successfully."}
+        return {"message": f"Movie '{title}' deleted successfully."}
+    except PermissionError:
+        raise HTTPException(status_code=500, detail="Permission denied: Unable to delete movie")
+    except OSError as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting movie: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 # assign penalty to user
 @router.post("/penalty")
