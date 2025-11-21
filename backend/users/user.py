@@ -33,8 +33,9 @@ class User:
                     data = json.load(jsonFile)
                 except json.JSONDecodeError:
                     data = {}
-
         
+        self.penaltyPointsList = []  # store PenaltyPoints objects
+
       
         # Validate and set username
         if self.checkUsername(username):
@@ -194,5 +195,9 @@ class User:
                     # Session expired, remove it
                     del cls.activeSessions[sessionToken]
             return None
+    
+    def totalPenaltyPoints(self) -> int:
+        # Return the total number of penalty points
+        return sum(pp.points for pp in self.penaltyPointsList)
     
                
