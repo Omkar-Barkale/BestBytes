@@ -132,7 +132,20 @@ def test_login_fails_not_verified():
         User.login(username, password)
 
 
+#test fcn for duplicate account creation
+def test_create_account_duplicate_username():
+    username = "duplicateUser"
+    email1 = "duplicate1@example.com"
+    email2 = "duplicate2@example.com"
+    password = "password1234"
 
+    # First account
+    user1 = User(username, email1, password, save=False)
+    User.usersDb[user1.username] = user1
+
+    # Second account with same username should fail
+    with pytest.raises(ValueError, match="username already exists"):
+        User.createAccount(username, email2, password)
 
 
 
