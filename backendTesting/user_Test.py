@@ -49,6 +49,7 @@ class encryptPassword(TestCase):
 # logging in with less than 3 penalty points check
 def test_login_allowed_with_fewer_than_3_penalties():
     user = User.createAccount(name, email, pswd, save=False)
+    user.isVerified = True
     
     # Add 2 penalty points
     PenaltyPoints(1, user, "Reason 1")
@@ -62,6 +63,7 @@ def test_login_allowed_with_fewer_than_3_penalties():
 # logging in with >= 3 penalty points check
 def test_login_blocked_with_more_than_3_penalties():
     user = User.createAccount("testblocked", "blocked_" + email, pswd, save=False)
+    user.isVerified = True
     
     # Add more than 3 penalty points
     PenaltyPoints(1, user, "Reason 1")
