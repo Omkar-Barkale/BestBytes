@@ -141,7 +141,7 @@ class User:
             
             return newUser
     
-
+    @classmethod
     def login(cls, username: str, password: str) -> Optional[str]:
         """Login user and return session token"""
         with cls._lock:  # Thread-safe operation

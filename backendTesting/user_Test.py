@@ -76,23 +76,31 @@ def test_login_allowed_with_fewer_than_3_penalties():
     token = User.login(user.username, pswd)
     assert token is not None
 
+def test_login_allowed_with_fewer_than_3_penalties():
+    user = User(name, email, pswd, save=False)
+    user.isVerified = True
 
-# logging in with >= 3 penalty points
+    # Add 2 penalty points
+    PenaltyPoints(1, user, "Reason 1")
+    PenaltyPoints(1, user, "Reason 2")
+
+    # Add to in-memory db
+    User.usersDb[user.username] = user
+
+    token = User.login(user.username, pswd)
+    assert token is not None
+
+
 def test_login_blocked_with_more_than_3_penalties():
     blocked_user = User("blockeduser", "blocked_" + email, pswd, save=False)
     blocked_user.isVerified = True
 
     # Add 5 penalty points
-    PenaltyPoints(1, blocked_user, "Reason 1")
-    PenaltyPoints(1, blocked_user, "Reason 2")
-    PenaltyPoints(1, blocked_user, "Reason 3")
-    PenaltyPoints(1, blocked_user, "Reason 4")
-    PenaltyPoints(1, blocked_user, "Reason 5")
+    for i in range(5):
+        PenaltyPoints(1, blocked_user, f"Reason {i+1}")
 
-    # Add user to in-memory db
     User.usersDb[blocked_user.username] = blocked_user
 
-    # Login should fail due to too many penalty points
     with pytest.raises(ValueError, match="too many penalty points"):
         User.login(blocked_user.username, pswd)
         
