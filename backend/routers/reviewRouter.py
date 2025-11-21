@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 from typing import List
 from schemas.movie import movie
 from schemas.movieReviews import movieReviews, movieReviewsCreate, movieReviewsUpdate
+from users.user import User
 
 router = APIRouter()
 
@@ -50,12 +51,19 @@ def getReviewsByUser(username: str):
 
 # update review
 @router.put("/{title}/review/{index}", response_model=movieReviews)
-def updateReview(title: str, index: int, updated_data: movieReviewsUpdate):
+def updateReview(title: str, index: int, updated_data: movieReviewsUpdate, sessionToken: str):
     """Update an existing review by index for a specific movie."""
+    current_user = User.getCurrentUser(User, sessionToken)
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Login required to Update Reviews")
+
     reviews = movieReviews_memory.get(title.lower(), [])
     if not reviews or index >= len(reviews):
         raise HTTPException(status_code=404, detail="Review not found")
 
+    if reviews[index].user.lower() != current_user.username.lower():
+        raise HTTPException(status_code=403, detail="You can't update others' reviews")
+    
     updatedReview = movieReviews(**updated_data.dict())
     reviews[index] = updatedReview
     movieReviews_memory[title.lower()] = reviews
@@ -64,11 +72,18 @@ def updateReview(title: str, index: int, updated_data: movieReviewsUpdate):
 
 # delete review
 @router.delete("/{title}/review/{index}")
-def deleteReview(title: str, index: int):
+def deleteReview(title: str, index: int, sessionToken: str):
     """Delete a review by index for a specific movie."""
+    current_user = User.getCurrentUser(User, sessionToken)
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Login required to Delete Reviews")
+
     reviews = movieReviews_memory.get(title.lower(), [])
     if not reviews or index >= len(reviews):
         raise HTTPException(status_code=404, detail="Review not found")
+    
+    if reviews[index].user.lower() != current_user.username.lower():
+        raise HTTPException(status_code=403, detail="You can't delete others' reviews")
 
     removed = reviews.pop(index)
     movieReviews_memory[title.lower()] = reviews

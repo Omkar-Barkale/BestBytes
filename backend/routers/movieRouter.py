@@ -7,6 +7,7 @@ from schemas.movieReviews import movieReviews, movieReviewsCreate
 
 router = APIRouter()
 
+
 # load data
 DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data")
 
@@ -56,9 +57,13 @@ def get_movie_by_title(title: str):
 
 # add review
 @router.post("/{title}/review", response_model=movieReviews)
-def add_review(title: str, review_data: movieReviewsCreate):
-    """Add a review to a specific movie (stored temporarily in memory)."""
-
+def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str):
+    """Add a review"""
+    from users.user import User
+    current_user = User.getCurrentUser(User, sessionToken)
+    if not current_user: 
+        raise HTTPException(status_code=401, detail="Login required to review")
+    
     movie_folder = os.path.join(DATA_PATH, title)
     if not os.path.exists(movie_folder):
         raise HTTPException(status_code=404, detail=f"Movie '{title}' not found")
