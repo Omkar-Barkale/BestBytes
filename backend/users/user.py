@@ -60,7 +60,9 @@ class User:
         self.lastLogin = None
 
         if save:
-            saveUserToDB(path)
+            saveUserToDB(username=self.username, email=self.email, passwordHash=self.passwordHash, path=path)
+
+
         
     
     
@@ -106,7 +108,7 @@ class User:
             return True
         return False
     
-    
+    @classmethod
     def _cleanExpiredSessions(cls):
         """Remove expired sessions"""
         currentTime = datetime.now()
@@ -117,7 +119,7 @@ class User:
         for token in expiredTokens:
             del cls.activeSessions[token]
     
-    
+    @classmethod
     def createAccount(cls, username: str, email: str, password: str) -> 'User':
         """Create a new user account"""
         with cls._lock:  # Thread-safe operation
@@ -139,7 +141,7 @@ class User:
             
             return newUser
     
-
+    @classmethod
     def login(cls, username: str, password: str) -> Optional[str]:
         """Login user and return session token"""
         with cls._lock:  # Thread-safe operation
@@ -151,6 +153,10 @@ class User:
                 raise ValueError("Invalid username or password")
             
             user = cls.usersDb[username]
+            
+            # check if the user has 3 or more penalty points (if so they can't log in)
+            if user.totalPenaltyPoints() >= 3:
+                raise ValueError("You cannot login currently due to too many penalty points")
             
             # Verify password
             if not user.verifyPassword(password):
