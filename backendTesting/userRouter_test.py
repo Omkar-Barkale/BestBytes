@@ -87,3 +87,57 @@ class TestRegisterUser:
 
         assert response.status_code == 400
         assert response.json()["detail"] == "Invalid email format"
+
+class TestVerifyEmail:
+    """Tests for POST /verify"""
+
+    @pytest.fixture(autouse=True)
+    def setup_users(self):
+        """Reset and preload a fake user before each test."""
+        User.usersDb.clear()
+
+
+        class DummyUser:
+            def __init__(self):
+                self.username = "khushi"
+                self.email = "k@gmail.com"
+                self.isVerified = False
+
+            def verifyEmail(self, token):
+                return token == "correct-token"
+
+
+        User.usersDb["khushi"] = DummyUser()
+
+    def test_verify_success(self):
+        """Verification works with correct token -> 200"""
+
+        response = client.post("/verify", params={
+            "username": "khushi",
+            "token": "correct-token",
+        })
+
+        assert response.status_code == 200
+        assert response.json()["message"] == "Email verified successfully!"
+
+    def test_verify_user_not_found(self):
+        """Unknown username -> 404"""
+
+        response = client.post("/verify", params={
+            "username": "unknown",
+            "token": "whatever",
+        })
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "User not found"
+
+    def test_verify_invalid_token(self):
+        """Wrong token -> 400"""
+
+        response = client.post("/verify", params={
+            "username": "khushi",
+            "token": "wrong-token",
+        })
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Invalid verification token"
