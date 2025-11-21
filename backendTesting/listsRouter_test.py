@@ -227,3 +227,88 @@ class TestAddMovieToList:
 
         from backend.routers.listsRouter import userMovieLists
         assert "Joker" in userMovieLists["khushi"]["Favorites"]
+
+class TestViewAllLists:
+    """Tests for GET /{username} endpoint"""
+
+    @pytest.fixture(autouse=True)
+    def setup_lists(self, mock_valid_user):
+        """Create two lists for user khushi"""
+        client.post(
+            "/create",
+            params={
+                "username": "Khushi",
+                "listName": "Favorites",
+                "sessionToken": "abc"
+            }
+        )
+        client.post(
+            "/create",
+            params={
+                "username": "Khushi",
+                "listName": "Watchlist",
+                "sessionToken": "abc"
+            }
+        )
+
+    def test_view_all_lists_success(self, mock_valid_user):
+        """View all lists successfully"""
+        response = client.get(
+            "/khushi",
+            params={"sessionToken": "abc"}
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+
+        # both lists should exist and be empty arrays
+        assert "Favorites" in body
+        assert "Watchlist" in body
+        assert body["Favorites"] == []
+        assert body["Watchlist"] == []
+
+    def test_view_lists_unauthenticated(self, mock_invalid_user):
+        """User must be logged in to view lists"""
+        response = client.get(
+            "/khushi",
+            params={"sessionToken": "wrong"}
+        )
+
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Login required to View Lists"
+
+    def test_view_lists_user_not_found(self, mock_valid_user):
+        """User does not exist or has no lists"""
+        response = client.get(
+            "/unknownuser",
+            params={"sessionToken": "abc"}
+        )
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "No lists found for this user"
+
+    def test_view_lists_case_insensitive(self, mock_valid_user):
+        """Usernames must be case-insensitive"""
+        response = client.get(
+            "/KhUsHi",
+            params={"sessionToken": "abc"}
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert "Favorites" in body
+        assert "Watchlist" in body
+
+    def test_view_lists_when_user_has_zero_lists(self, mock_valid_user):
+        """If user exists but has zero lists, return 404"""
+
+        from backend.routers.listsRouter import userMovieLists
+        userMovieLists["khushi"].clear()
+
+        response = client.get(
+            "/khushi",
+            params={"sessionToken": "abc"}
+        )
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "No lists found for this user"
