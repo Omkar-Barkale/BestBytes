@@ -117,7 +117,7 @@ class User:
         for token in expiredTokens:
             del cls.activeSessions[token]
     
-    
+    @classmethod
     def createAccount(cls, username: str, email: str, password: str) -> 'User':
         """Create a new user account"""
         with cls._lock:  # Thread-safe operation
