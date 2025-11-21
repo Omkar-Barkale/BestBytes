@@ -152,6 +152,10 @@ class User:
             
             user = cls.usersDb[username]
             
+            # check if the user has 3 or more penalty points (if so they can't log in)
+            if user.totalPenaltyPoints() >= 3:
+                raise ValueError("You cannot login currently due to too many penalty points")
+            
             # Verify password
             if not user.verifyPassword(password):
                 raise ValueError("Invalid username or password")

@@ -2,7 +2,8 @@ import pytest
 import sys
 from pathlib import Path
 import json
-from backend.users import user
+from backend.users import User
+from backend.users.penaltyPoints import PenaltyPoints
 from unittest.mock import mock_open, patch, MagicMock
 from unittest import TestCase
 
@@ -11,7 +12,7 @@ from unittest import TestCase
 name = "test"
 email = "email@email.com"
 pswd = "password"
-testUser = user.User(name, email, pswd, save = False)
+testUser = User.User(name, email, pswd, save = False)
 
 
 #Test checkUsername
@@ -44,6 +45,7 @@ class encryptPassword(TestCase):
     def testEncryptPassword(self):
         assert isinstance(testUser.encryptPassword("password"),bytes)
     
+
 
 
     
