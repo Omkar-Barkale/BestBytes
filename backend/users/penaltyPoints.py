@@ -1,15 +1,28 @@
 import datetime
-from backend.schemas.user import user
+import time
+from backend.users.user import User
 
-class penaltyPoints:
-    
+class PenaltyPoints:
     #class variables: 
-    # points (int), user (user), reason (string), dateIssued (date)
-    def __init__ (self, points: int, user: user, reason: str):
+    # points (int), user (user), reason (string), dateIssued (date)    
+    def __init__(self, points: int, user: User, reason: str):
         self.points = points
         self.user = user
         self.reason = reason
-        self.dateIssued = datetime.datetime.now
-    
+        self.dateIssued = datetime.datetime.now()
+        time.sleep(0.001)  # 1 millisecond delay to prevent identical timestamps
+        
+        # adding a timeout to the penalties (lasts 7 days default)
+        self.expiresAt = self.dateIssued + datetime.timedelta(days=7)
+        
+        # Automatically add this penalty to the user's list
+        user.penaltyPointsList.append(self)
+
+    def isExpired(self) -> bool:
+        return datetime.datetime.now() > self.expiresAt
+
     def __repr__(self):
-        return f"<penaltyPoints user={self.user.username}, points={self.points}, reason='{self.reason}'>"
+        return (
+            f"<PenaltyPoints user={self.user.username}, "
+            f"points={self.points}, reason='{self.reason}'>"
+        )
