@@ -46,6 +46,16 @@ class encryptPassword(TestCase):
         assert isinstance(testUser.encryptPassword("password"),bytes)
     
 
-
-
+# logging in with less than 3 penalty points check
+def test_login_allowed_with_fewer_than_3_penalties():
+    user = User.User(name, email, pswd, save=False)
     
+    # Add 2 penalty points
+    PenaltyPoints(1, user, "Reason 1")
+    PenaltyPoints(1, user, "Reason 2")
+    
+    # Should not raise error
+    token = user.login(name, pswd)
+    assert token is not None
+
+
