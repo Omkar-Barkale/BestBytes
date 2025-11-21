@@ -53,11 +53,13 @@ class User:
         # Basic email format validation
         emailPattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(emailPattern, email):
+            return True
+        else:
             return False
     
 
     
-    def encryptPassword(password: str) -> bytes:
+    def encryptPassword(self, password: str) -> bytes:
         """Encrypt password using bcrypt"""
         if len(password) < 8:
             raise ValueError("Password must be at least 8 characters long")
