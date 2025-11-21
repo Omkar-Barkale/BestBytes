@@ -8,3 +8,7 @@ this is my modification
 Khushi's edit
 
 Prashaant's edit
+
+
+docker build -t backend
+uvicorn backend.app:app --reload
