@@ -312,3 +312,152 @@ class TestViewAllLists:
 
         assert response.status_code == 404
         assert response.json()["detail"] == "No lists found for this user"
+
+class TestRemoveMovieFromList:
+    """Tests for DELETE /remove endpoint"""
+
+    @pytest.fixture(autouse=True)
+    def setup_user_list_with_movie(self, mock_valid_user):
+        """Create user, list, and insert Joker movie before each test"""
+
+        # creates list
+        client.post(
+            "/create",
+            params={
+                "username": "Khushi",
+                "listName": "Favorites",
+                "sessionToken": "abc"
+            }
+        )
+
+        # adds Joker to list
+        client.post(
+            "/add",
+            params={
+                "username": "Khushi",
+                "listName": "Favorites",
+                "movieTitle": "Joker",
+                "sessionToken": "abc"
+            }
+        )
+
+    def test_remove_movie_success(self, mock_valid_user):
+        """Successfully remove a movie from the list"""
+        response = client.delete(
+            "/remove",
+            params={
+                "username": "Khushi",
+                "listName": "Favorites",
+                "movieTitle": "Joker",
+                "sessionToken": "abc"
+            }
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {"message": "Removed 'Joker' from list 'Favorites'"}
+
+        from backend.routers.listsRouter import userMovieLists
+        assert "Joker" not in userMovieLists["khushi"]["Favorites"]
+
+    def test_remove_movie_unauthenticated(self, mock_invalid_user):
+        """Removing a movie must require login"""
+        response = client.delete(
+            "/remove",
+            params={
+                "username": "Khushi",
+                "listName": "Favorites",
+                "movieTitle": "Joker",
+                "sessionToken": "wrong"
+            }
+        )
+
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Login required to Delete Lists"
+
+    def test_remove_movie_user_not_found(self, mock_valid_user):
+        """If the user does not exist"""
+        response = client.delete(
+            "/remove",
+            params={
+                "username": "UnknownUser",
+                "listName": "Favorites",
+                "movieTitle": "Joker",
+                "sessionToken": "abc"
+            }
+        )
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "User not found"
+
+    def test_remove_movie_list_not_found(self, mock_valid_user):
+        """If list does not exist"""
+        response = client.delete(
+            "/remove",
+            params={
+                "username": "Khushi",
+                "listName": "NotAList",
+                "movieTitle": "Joker",
+                "sessionToken": "abc"
+            }
+        )
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "List not found"
+
+    def test_remove_movie_not_in_list(self, mock_valid_user):
+        """Trying to remove a movie that does not exist in the list"""
+
+        # makes the list empty
+        client.delete(
+            "/remove",
+            params={
+                "username": "Khushi",
+                "listName": "Favorites",
+                "movieTitle": "Joker",
+                "sessionToken": "abc"
+            }
+        )
+
+        # removes
+        response = client.delete(
+            "/remove",
+            params={
+                "username": "Khushi",
+                "listName": "Favorites",
+                "movieTitle": "Joker",
+                "sessionToken": "abc"
+            }
+        )
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Movie not in list"
+
+    def test_remove_movie_case_insensitive_user(self, mock_valid_user):
+        """Usernames should be case-insensitive when deleting movies"""
+
+        # readds movie
+        client.post(
+            "/add",
+            params={
+                "username": "khushi",
+                "listName": "Favorites",
+                "movieTitle": "Joker",
+                "sessionToken": "abc"
+            }
+        )
+
+        response = client.delete(
+            "/remove",
+            params={
+                "username": "KhUsHi",
+                "listName": "Favorites",
+                "movieTitle": "Joker",
+                "sessionToken": "abc"
+            }
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {"message": "Removed 'Joker' from list 'Favorites'"}
+
+        from backend.routers.listsRouter import userMovieLists
+        assert "Joker" not in userMovieLists["khushi"]["Favorites"]
