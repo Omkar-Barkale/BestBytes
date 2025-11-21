@@ -38,7 +38,7 @@ class User:
         self.lastLogin = None
     
     
-    def checkUsername(username: str) -> bool:
+    def checkUsername(self, username: str) -> bool:
         """Validate username: 3-20 characters, alphanumeric only"""
         if len(username) < 3 or len(username) > 20:
             return False
