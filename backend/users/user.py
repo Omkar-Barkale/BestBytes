@@ -60,7 +60,8 @@ class User:
         self.lastLogin = None
 
         if save:
-            saveUserToDB(email=self.email, passwordHash=self.passwordHash, path=path)
+            saveUserToDB(username=self.username, email=self.email, passwordHash=self.passwordHash, path=path)
+
 
         
     
