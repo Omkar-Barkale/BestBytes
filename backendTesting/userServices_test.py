@@ -2,11 +2,11 @@ import pytest
 import sys
 from pathlib import Path
 import json
-from backend.services.userServices import saveUserToDB
+from backend.services.userServices import saveUserToDB,findUserInDB
 from backend.users import user
-import bcrypt
+from unittest import TestCase
+from unittest.mock import Mock, patch, MagicMock, mock_open
 
-from unittest.mock import mock_open, patch, MagicMock
 
 @pytest.fixture
 def mockBaseDir(tmp_path):
@@ -38,3 +38,14 @@ def test_saveUserToDB(mockBaseDir):
     #clean up
     with open(path,'w') as jsonFile:
         jsonFile.truncate(0)
+
+
+def testFindUserInDB(mockBaseDir):
+    saveUserToDB(testUser.username,testUser.email,testUser.passwordHash.decode('utf-8'),mockBaseDir)
+    saveUserToDB("testUser.username",testUser.email,testUser.passwordHash.decode('utf-8'),mockBaseDir)
+    saveUserToDB("tester",testUser.email,testUser.passwordHash.decode('utf-8'),mockBaseDir)
+
+    assert findUserInDB(testUser.username,mockBaseDir) == {"email":testUser.email,"password":testUser.passwordHash.decode('utf-8')}
+    with pytest.raises(ValueError):
+        findUserInDB("notTester",mockBaseDir)
+        
