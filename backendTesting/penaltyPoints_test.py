@@ -39,3 +39,18 @@ def test_penalty_point_multiple_creations_have_different_timestamps():
 
     assert pp1.dateIssued != pp2.dateIssued
 
+
+def test_penalty_points_expire_after_timeout():
+    user = User("timeoutUser", "timeout@example.com", "password123", save=False)
+
+    pp = PenaltyPoints(points=2, user=user, reason="Temporary issue")
+
+    # Force expiry by shifting expiration time to the past
+    pp.expiresAt = datetime.datetime.now() - datetime.timedelta(seconds=1)
+
+    assert pp.isExpired() is True
+    assert user.totalPenaltyPoints() == 0  # expired penalties should not count
+
+
+
+
