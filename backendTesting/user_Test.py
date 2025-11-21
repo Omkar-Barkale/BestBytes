@@ -61,30 +61,40 @@ def test_login_allowed_with_fewer_than_3_penalties():
 
 # logging in with less than 3 penalty points
 def test_login_allowed_with_fewer_than_3_penalties():
-    user = User.createAccount(name, email, pswd)
-    user.isVerified = True  # mark verified for login
+    # create user without saving to disk
+    user = User(name, email, pswd, save=False)
+    user.isVerified = True  # bypass email verification for testing
 
     # Add 2 penalty points
-    pp1 = PenaltyPoints(1, user, "Reason 1")
-    pp2 = PenaltyPoints(1, user, "Reason 2")
-    user.penaltyPointsList.extend([pp1, pp2])  # important for totalPenaltyPoints
+    PenaltyPoints(1, user, "Reason 1")
+    PenaltyPoints(1, user, "Reason 2")
 
-    # Should not raise error
-    token = User.login(name, pswd)
+    # Add user to in-memory db (needed for login)
+    User.usersDb[user.username] = user
+
+    # Login should succeed
+    token = User.login(user.username, pswd)
     assert token is not None
 
 
 # logging in with >= 3 penalty points
 def test_login_blocked_with_more_than_3_penalties():
-    blocked_name = "testblocked"
-    blocked_email = "blocked_" + email
-    user = User.createAccount(blocked_name, blocked_email, pswd)
-    user.isVerified = True
+    blocked_user = User("blockeduser", "blocked_" + email, pswd, save=False)
+    blocked_user.isVerified = True
 
     # Add 5 penalty points
-    points = [PenaltyPoints(1, user, f"Reason {i}") for i in range(1, 6)]
-    user.penaltyPointsList.extend(points)
+    PenaltyPoints(1, blocked_user, "Reason 1")
+    PenaltyPoints(1, blocked_user, "Reason 2")
+    PenaltyPoints(1, blocked_user, "Reason 3")
+    PenaltyPoints(1, blocked_user, "Reason 4")
+    PenaltyPoints(1, blocked_user, "Reason 5")
 
-    # Should raise ValueError because points >= 3
+    # Add user to in-memory db
+    User.usersDb[blocked_user.username] = blocked_user
+
+    # Login should fail due to too many penalty points
     with pytest.raises(ValueError, match="too many penalty points"):
-        User.login(blocked_name, pswd)
+        User.login(blocked_user.username, pswd)
+        
+        
+        
