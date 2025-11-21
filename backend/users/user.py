@@ -8,12 +8,11 @@ from pathlib import Path
 from typing import Optional
 from datetime import datetime, timedelta
 import threading
+
 from backend.services.userServices import saveUserToDB
 
 #pylint: disable = C0303
 class User:
-    # Class variable to store all users (in production, use a database)
-    usersDb = {}
     activeSessions = {}  # Store active user sessions with expiry
     _lock = threading.Lock()  # Thread lock for concurrent access
     sessionTimeout = timedelta(hours=24)  # Sessions expire after 24 hours
