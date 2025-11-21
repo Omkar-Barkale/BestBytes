@@ -62,5 +62,13 @@ class TestVerifyEmail:
     def testVerifyEmailFalse(self):
         assert testUser.verifyEmail(testUser.id) == False
     
+# logging in with less than 3 penalty points check
+def test_login_allowed_with_fewer_than_3_penalties():
+    user = User.createAccount(name, email, pswd)
+    user.isVerified = True
+    
+    def testVerifyEmailFalse(self):
+        assert testUser.verifyEmail(testUser.id) == False
+    
 
     
