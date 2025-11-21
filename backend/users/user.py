@@ -8,12 +8,11 @@ from pathlib import Path
 from typing import Optional
 from datetime import datetime, timedelta
 import threading
-from backend.services.userServices import saveUserToDB
+
+from services.userServices import saveUserToDB
 
 #pylint: disable = C0303
 class User:
-    # Class variable to store all users (in production, use a database)
-    usersDb = {}
     activeSessions = {}  # Store active user sessions with expiry
     _lock = threading.Lock()  # Thread lock for concurrent access
     sessionTimeout = timedelta(hours=24)  # Sessions expire after 24 hours
@@ -33,9 +32,8 @@ class User:
                     data = json.load(jsonFile)
                 except json.JSONDecodeError:
                     data = {}
-        
-        self.penaltyPointsList = []  # store PenaltyPoints objects
 
+        
       
         # Validate and set username
         if self.checkUsername(username):
@@ -60,9 +58,7 @@ class User:
         self.lastLogin = None
 
         if save:
-            saveUserToDB(username=self.username, email=self.email, passwordHash=self.passwordHash, path=path)
-
-
+            saveUserToDB(path)
         
     
     
@@ -108,7 +104,7 @@ class User:
             return True
         return False
     
-    @classmethod
+    
     def _cleanExpiredSessions(cls):
         """Remove expired sessions"""
         currentTime = datetime.now()
@@ -119,7 +115,7 @@ class User:
         for token in expiredTokens:
             del cls.activeSessions[token]
     
-    @classmethod
+    
     def createAccount(cls, username: str, email: str, password: str) -> 'User':
         """Create a new user account"""
         with cls._lock:  # Thread-safe operation
@@ -141,7 +137,7 @@ class User:
             
             return newUser
     
-    @classmethod
+
     def login(cls, username: str, password: str) -> Optional[str]:
         """Login user and return session token"""
         with cls._lock:  # Thread-safe operation
@@ -153,10 +149,6 @@ class User:
                 raise ValueError("Invalid username or password")
             
             user = cls.usersDb[username]
-            
-            # check if the user has 3 or more penalty points (if so they can't log in)
-            if user.totalPenaltyPoints() >= 3:
-                raise ValueError("You cannot login currently due to too many penalty points")
             
             # Verify password
             if not user.verifyPassword(password):
@@ -201,11 +193,5 @@ class User:
                     # Session expired, remove it
                     del cls.activeSessions[sessionToken]
             return None
-    
-    def totalPenaltyPoints(self) -> int:
-    # Filter out expired penalties
-        active = [pp for pp in self.penaltyPointsList if not pp.isExpired()]
-        return sum(pp.points for pp in active)
-
     
                

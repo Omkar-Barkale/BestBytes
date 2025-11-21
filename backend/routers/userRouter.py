@@ -1,6 +1,6 @@
 import os
 from fastapi import APIRouter, HTTPException
-from backend.users.user import User
+from users.user import User
 
 router = APIRouter()
 

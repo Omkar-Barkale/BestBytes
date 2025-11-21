@@ -1,8 +1,8 @@
 import os
 import json
 from fastapi import APIRouter, HTTPException
-from backend.schemas.movie import movieCreate
-from backend.users.user import User
+from schemas.movie import movieCreate
+from users.user import User
 
 router = APIRouter()
 

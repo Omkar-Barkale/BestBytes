@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from typing import Dict, List
-from backend.users.user import User
+from users.user import User
 
 router = APIRouter()
 
