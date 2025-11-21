@@ -12,6 +12,9 @@ class PenaltyPoints:
         self.dateIssued = datetime.datetime.now()
         time.sleep(0.001)  # 1 millisecond delay to prevent identical timestamps
         
+        # adding a timeout to the penalties (lasts 7 days default)
+        self.expiresAt = self.dateIssued + datetime.timedelta(days=7)
+        
         # Automatically add this penalty to the user's list
         user.penaltyPointsList.append(self)
 
