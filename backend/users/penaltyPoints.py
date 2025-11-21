@@ -18,6 +18,9 @@ class PenaltyPoints:
         # Automatically add this penalty to the user's list
         user.penaltyPointsList.append(self)
 
+    def isExpired(self) -> bool:
+        return datetime.datetime.now() > self.expiresAt
+
     def __repr__(self):
         return (
             f"<PenaltyPoints user={self.user.username}, "
