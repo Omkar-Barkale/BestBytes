@@ -59,23 +59,32 @@ def test_login_allowed_with_fewer_than_3_penalties():
     token = user.login(name, pswd)
     assert token is not None
 
+# logging in with less than 3 penalty points
+def test_login_allowed_with_fewer_than_3_penalties():
+    user = User.createAccount(name, email, pswd)
+    user.isVerified = True  # mark verified for login
 
-# logging in with >= 3 penalty points check
+    # Add 2 penalty points
+    pp1 = PenaltyPoints(1, user, "Reason 1")
+    pp2 = PenaltyPoints(1, user, "Reason 2")
+    user.penaltyPointsList.extend([pp1, pp2])  # important for totalPenaltyPoints
+
+    # Should not raise error
+    token = User.login(name, pswd)
+    assert token is not None
+
+
+# logging in with >= 3 penalty points
 def test_login_blocked_with_more_than_3_penalties():
-    user = User.createAccount("testblocked", "blocked_" + email, pswd)
+    blocked_name = "testblocked"
+    blocked_email = "blocked_" + email
+    user = User.createAccount(blocked_name, blocked_email, pswd)
     user.isVerified = True
-    
-    # Add more than 3 penalty points
-    PenaltyPoints(1, user, "Reason 1")
-    PenaltyPoints(1, user, "Reason 2")
-    PenaltyPoints(1, user, "Reason 3")
-    PenaltyPoints(1, user, "Reason 4")
-    PenaltyPoints(1, user, "Reason 5")
-    
+
+    # Add 5 penalty points
+    points = [PenaltyPoints(1, user, f"Reason {i}") for i in range(1, 6)]
+    user.penaltyPointsList.extend(points)
+
     # Should raise ValueError because points >= 3
-    with pytest.raises(ValueError, match="Account blocked"):
-        user.login("testblocked", pswd)
-
-    
-
-
+    with pytest.raises(ValueError, match="too many penalty points"):
+        User.login(blocked_name, pswd)
