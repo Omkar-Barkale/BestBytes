@@ -1,7 +1,10 @@
 import bcrypt
 import uuid
 import re
+import json
 
+
+from pathlib import Path
 from typing import Optional
 from datetime import datetime, timedelta
 import threading
@@ -14,13 +17,30 @@ class User:
     _lock = threading.Lock()  # Thread lock for concurrent access
     sessionTimeout = timedelta(hours=24)  # Sessions expire after 24 hours
     
-    def __init__(self, username: str, email: str, password: str):
+    def __init__(self, username: str, email: str, password: str, save:bool = True):
         """Initialize a new user with validation"""
         self.id = str(uuid.uuid4())
+
+        path = Path(r"backend\data\Users\userList.json")
+
+        self.path = path
+
+        data = {}
+        if path.exists():
+            with open(path, 'r') as jsonFile:
+                try:
+                    data = json.load(jsonFile)
+                except json.JSONDecodeError:
+                    data = {}
+
         
+      
         # Validate and set username
         if self.checkUsername(username):
-            self.username = username
+            if username in data:
+                raise ValueError("Username already exists")
+            else:
+                self.username =username
         else:
             raise ValueError("Invalid username: must be 3-20 characters and alphanumeric")
         
@@ -36,9 +56,13 @@ class User:
         self.verificationToken = str(uuid.uuid4())
         self.createdAt = datetime.now()
         self.lastLogin = None
+
+        if save:
+            self.saveUserToDB(path)
+        
     
     
-    def checkUsername(username: str) -> bool:
+    def checkUsername(self, username: str) -> bool:
         """Validate username: 3-20 characters, alphanumeric only"""
         if len(username) < 3 or len(username) > 20:
             return False
@@ -48,16 +72,17 @@ class User:
             return False
     
     
-    def checkEmail(email: str) -> bool:
+    def checkEmail(self, email: str) -> bool:
         """Validate email format and check if domain has MX records"""
         # Basic email format validation
         emailPattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-        if not re.match(emailPattern, email):
-            return False
+        if re.match(emailPattern, email):
+            return True
+        return False
     
 
     
-    def encryptPassword(password: str) -> bytes:
+    def encryptPassword(self, password: str) -> bytes:
         """Encrypt password using bcrypt"""
         if len(password) < 8:
             raise ValueError("Password must be at least 8 characters long")
@@ -65,7 +90,8 @@ class User:
         # Generate salt and hash password
         salt = bcrypt.gensalt()
         hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
-        return hashed
+        
+        return hashed.decode("utf-8")
     
     def verifyPassword(self, password: str) -> bool:
         """Verify a password against the stored hash"""
@@ -167,4 +193,26 @@ class User:
                     # Session expired, remove it
                     del cls.activeSessions[sessionToken]
             return None
-    
+    def saveUserToDB(self,path: Path):
+        newUser ={
+            self.username:{
+            "email":self.email,
+            "password":self.passwordHash}
+        }
+
+        print(newUser)
+        data = {}
+        if path.exists():
+            with open(path, 'r+') as jsonFile:
+                try:
+                    data = json.load(jsonFile)
+                except json.JSONDecodeError:
+                    data = {}
+                
+                data.update(newUser)
+                print(data)
+
+                jsonFile.seek(0)
+                json.dump(data,jsonFile, indent = 2)
+                jsonFile.truncate()
+               
