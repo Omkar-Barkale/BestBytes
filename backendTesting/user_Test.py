@@ -59,3 +59,22 @@ def test_login_allowed_with_fewer_than_3_penalties():
     assert token is not None
 
 
+# logging in with greater than or equal to 3 penalty points check
+def test_login_blocked_with_more_than_3_penalties():
+    user = User.User(name + "_blocked", "blocked_" + email, pswd, save=False)
+    
+    # Add more than 3 penalty points
+    PenaltyPoints(1, user, "Reason 1")
+    PenaltyPoints(1, user, "Reason 2")
+    PenaltyPoints(1, user, "Reason 3")
+    PenaltyPoints(1, user, "Reason 4")
+    PenaltyPoints(1, user, "Reason 5")
+    
+    # Should raise ValueError because points >= 3
+    with pytest.raises(ValueError, match="Account blocked"):
+        user.login(name + "_blocked", pswd)
+
+
+    
+
+
