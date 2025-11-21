@@ -33,8 +33,16 @@ def addMovie(movieData: movieCreate):
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 # delete movie
 @router.delete("/delete-movie/{title}")
-def deleteMovie(title: str):
+def deleteMovie(title: str, sessionToken: str):
     """Delete a movie folder and its metadata file."""
+    
+    # CHECK: User authentication and admin authorization
+    current_user = User.getCurrentUser(User, sessionToken)
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Login required to delete movies")
+    if getattr(current_user, "role", None) != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can delete movies")
+    
     folderPath = os.path.join(DATA_PATH, title)
     if not os.path.exists(folderPath):
         raise HTTPException(status_code=404, detail="Movie not found")
