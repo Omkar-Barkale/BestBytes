@@ -4,6 +4,7 @@ from pathlib import Path
 import json
 from backend.services.userServices import saveUserToDB
 from backend.users import user
+import bcrypt
 
 from unittest.mock import mock_open, patch, MagicMock
 
@@ -23,7 +24,7 @@ testUser = user.User(name, email, pswd, save = False)
 def test_saveUserToDB(mockBaseDir):
     #If we call this function, we should be able to find the specific user created
     path = mockBaseDir/"users.json"
-    saveUserToDB(testUser.username,testUser.email,testUser.passwordHash,mockBaseDir)
+    saveUserToDB(testUser.username,testUser.email,testUser.passwordHash.decode('utf-8'),mockBaseDir)
     with open(path,'r') as jsonFile:
         try:
             data = json.load(jsonFile) 
@@ -32,7 +33,7 @@ def test_saveUserToDB(mockBaseDir):
         
     assert name in data
     assert email in data[name]["email"]
-    assert testUser.passwordHash in data[name]["password"]
+    assert testUser.passwordHash.decode('utf-8') in data[name]["password"]
 
     #clean up
     with open(path,'w') as jsonFile:
