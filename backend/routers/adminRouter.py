@@ -1,8 +1,8 @@
 import os
 import json
 from fastapi import APIRouter, HTTPException
-from schemas.movie import movieCreate
-from users.user import User
+from backend.schemas.movie import movieCreate
+from backend.users.user import User
 from typing import Optional
 from typing import Query
 
