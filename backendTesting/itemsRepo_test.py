@@ -12,67 +12,67 @@ from backend.repositories import itemsRepo
 class TestGetMovieDir:
     """Tests for getMovieDir function"""
     
-    def test_get_movie_dir_returns_correct_path(self):
+    def testGetMovieDirReturnsCorrectPath(self):
         """Verify getMovieDir constructs correct path"""
-        movie_name = "test"
-        expected_path = itemsRepo.baseDir / movie_name
-        assert itemsRepo.getMovieDir(movie_name) == expected_path
+        movieName = "test"
+        expectedPath = itemsRepo.baseDir / movieName
+        assert itemsRepo.getMovieDir(movieName) == expectedPath
     
-    def test_get_movie_dir_with_special_characters(self):
+    def testGetMovieDirWithSpecialCharacters(self):
         """Test movie names with special characters"""
-        movie_name = "test-movie_2025"
-        expected_path = itemsRepo.baseDir / movie_name
-        assert itemsRepo.getMovieDir(movie_name) == expected_path
+        movieName = "test-movie_2025"
+        expectedPath = itemsRepo.baseDir / movieName
+        assert itemsRepo.getMovieDir(movieName) == expectedPath
     
-    def test_get_movie_dir_with_spaces(self):
+    def testGetMovieDirWithSpaces(self):
         """Test movie names with spaces"""
-        movie_name = "The Great Movie"
-        expected_path = itemsRepo.baseDir / movie_name
-        assert itemsRepo.getMovieDir(movie_name) == expected_path
+        movieName = "The Great Movie"
+        expectedPath = itemsRepo.baseDir / movieName
+        assert itemsRepo.getMovieDir(movieName) == expectedPath
 
 
 class TestLoadMetadata:
     """Tests for loadMetadata function"""
     
-    def test_load_metadata_file_missing(self):
+    def testLoadMetadataFileMissing(self):
         """Returns empty dict when metadata file doesn't exist"""
         with patch("backend.repositories.itemsRepo.Path.exists", return_value=False):
             result = itemsRepo.loadMetadata("NonExistentMovie")
             assert result == {}
     
-    def test_load_metadata_success(self):
+    def testLoadMetadataSuccess(self):
         """Successfully loads valid metadata JSON"""
-        fake_json = '{"title": "FakeMovie", "year": 2025, "director": "John Doe"}'
+        fakeJson = '{"title": "FakeMovie", "year": 2025, "director": "John Doe"}'
         
         with patch("backend.repositories.itemsRepo.Path.exists", return_value=True), \
-             patch("backend.repositories.itemsRepo.Path.open", mock_open(read_data=fake_json)):
+             patch("backend.repositories.itemsRepo.Path.open", mock_open(read_data=fakeJson)):
             result = itemsRepo.loadMetadata("FakeMovie")
             assert result == {"title": "FakeMovie", "year": 2025, "director": "John Doe"}
     
-    def test_load_metadata_empty_json(self):
+    def testLoadMetadataEmptyJson(self):
         """Handles empty JSON object"""
-        fake_json = '{}'
+        fakeJson = '{}'
         
         with patch("backend.repositories.itemsRepo.Path.exists", return_value=True), \
-             patch("backend.repositories.itemsRepo.Path.open", mock_open(read_data=fake_json)):
+             patch("backend.repositories.itemsRepo.Path.open", mock_open(read_data=fakeJson)):
             result = itemsRepo.loadMetadata("FakeMovie")
             assert result == {}
     
-    def test_load_metadata_with_unicode(self):
+    def testLoadMetadataWithUnicode(self):
         """Handles Unicode characters in metadata"""
-        fake_json = '{"title": "Amélie", "director": "Jean-Pierre Jeunet"}'
+        fakeJson = '{"title": "Amélie", "director": "Jean-Pierre Jeunet"}'
         
         with patch("backend.repositories.itemsRepo.Path.exists", return_value=True), \
-             patch("backend.repositories.itemsRepo.Path.open", mock_open(read_data=fake_json)):
+             patch("backend.repositories.itemsRepo.Path.open", mock_open(read_data=fakeJson)):
             result = itemsRepo.loadMetadata("Amélie")
             assert result["title"] == "Amélie"
     
-    def test_load_metadata_corrupted_json(self):
+    def testLoadMetadataCorruptedJson(self):
         """Raises error for corrupted JSON"""
-        fake_json = '{"title": "FakeMovie", "year": 2025'  # Missing closing brace
+        fakeJson = '{"title": "FakeMovie", "year": 2025'  # Missing closing brace
         
         with patch("backend.repositories.itemsRepo.Path.exists", return_value=True), \
-             patch("backend.repositories.itemsRepo.Path.open", mock_open(read_data=fake_json)):
+             patch("backend.repositories.itemsRepo.Path.open", mock_open(read_data=fakeJson)):
             with pytest.raises(json.JSONDecodeError):
                 itemsRepo.loadMetadata("FakeMovie")
 
@@ -80,18 +80,18 @@ class TestLoadMetadata:
 class TestLoadReviews:
     """Tests for loadReviews function"""
     
-    def test_load_reviews_file_missing(self):
+    def testLoadReviewsFileMissing(self):
         """Returns empty list when reviews file doesn't exist"""
         with patch("backend.repositories.itemsRepo.Path.exists", return_value=False):
             result = itemsRepo.loadReviews("NonExistentMovie")
             assert result == []
     
-    def test_load_reviews_success(self):
+    def testLoadReviewsSuccess(self):
         """Successfully loads valid reviews CSV"""
-        csv_data = "name,review\nAlice,Great Movie\nBob,Ok"
+        csvData = "name,review\nAlice,Great Movie\nBob,Ok"
         
         with patch("backend.repositories.itemsRepo.Path.exists", return_value=True), \
-             patch("backend.repositories.itemsRepo.Path.open", mock_open(read_data=csv_data)):
+             patch("backend.repositories.itemsRepo.Path.open", mock_open(read_data=csvData)):
             result = itemsRepo.loadReviews("FakeMovie")
             assert len(result) == 2
             assert result[0]["name"] == "Alice"
@@ -99,31 +99,31 @@ class TestLoadReviews:
             assert result[1]["name"] == "Bob"
             assert result[1]["review"] == "Ok"
     
-    def test_load_reviews_empty_file(self):
+    def testLoadReviewsEmptyFile(self):
         """Handles CSV with only headers"""
-        csv_data = "name,review\n"
+        csvData = "name,review\n"
         
         with patch("backend.repositories.itemsRepo.Path.exists", return_value=True), \
-             patch("backend.repositories.itemsRepo.Path.open", mock_open(read_data=csv_data)):
+             patch("backend.repositories.itemsRepo.Path.open", mock_open(read_data=csvData)):
             result = itemsRepo.loadReviews("FakeMovie")
             assert result == []
     
-    def test_load_reviews_with_commas_in_content(self):
+    def testLoadReviewsWithCommasInContent(self):
         """Handles reviews containing commas"""
-        csv_data = "name,review\nAlice,\"Great, really enjoyed it\"\nBob,Okay"
+        csvData = "name,review\nAlice,\"Great, really enjoyed it\"\nBob,Okay"
         
         with patch("backend.repositories.itemsRepo.Path.exists", return_value=True), \
-             patch("backend.repositories.itemsRepo.Path.open", mock_open(read_data=csv_data)):
+             patch("backend.repositories.itemsRepo.Path.open", mock_open(read_data=csvData)):
             result = itemsRepo.loadReviews("FakeMovie")
             assert len(result) == 2
             assert result[0]["review"] == "Great, really enjoyed it"
     
-    def test_load_reviews_with_unicode(self):
+    def testLoadReviewsWithUnicode(self):
         """Handles Unicode characters in reviews"""
-        csv_data = "name,review\nAlice,Très bon film!\nBob,Excelente película"
+        csvData = "name,review\nAlice,Très bon film!\nBob,Excelente película"
         
         with patch("backend.repositories.itemsRepo.Path.exists", return_value=True), \
-             patch("backend.repositories.itemsRepo.Path.open", mock_open(read_data=csv_data)):
+             patch("backend.repositories.itemsRepo.Path.open", mock_open(read_data=csvData)):
             result = itemsRepo.loadReviews("FakeMovie")
             assert result[0]["review"] == "Très bon film!"
             assert result[1]["review"] == "Excelente película"
@@ -132,207 +132,207 @@ class TestLoadReviews:
 class TestSaveMetadata:
     """Tests for saveMetadata function"""
     
-    def test_save_metadata_writes_file(self, tmp_path):
+    def testSaveMetadataWritesFile(self, tmp_path):
         """Successfully writes metadata to file"""
-        movie_name = "FakeMovie"
+        movieName = "FakeMovie"
         data = {"title": "FakeMovie", "year": 2025}
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveMetadata(movie_name, data)
+            itemsRepo.saveMetadata(movieName, data)
             
-            file_path = tmp_path / movie_name / "metadata.json"
-            assert file_path.exists()
+            filePath = tmp_path / movieName / "metadata.json"
+            assert filePath.exists()
             
-            content = json.loads(file_path.read_text(encoding="utf-8"))
+            content = json.loads(filePath.read_text(encoding="utf-8"))
             assert content == data
     
-    def test_save_metadata_creates_directory(self, tmp_path):
+    def testSaveMetadataCreatesDirectory(self, tmp_path):
         """Creates directory if it doesn't exist"""
-        movie_name = "NewMovie"
+        movieName = "NewMovie"
         data = {"title": "NewMovie"}
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            movie_dir = tmp_path / movie_name
-            assert not movie_dir.exists()
+            movieDir = tmp_path / movieName
+            assert not movieDir.exists()
             
-            itemsRepo.saveMetadata(movie_name, data)
+            itemsRepo.saveMetadata(movieName, data)
             
-            assert movie_dir.exists()
-            assert (movie_dir / "metadata.json").exists()
+            assert movieDir.exists()
+            assert (movieDir / "metadata.json").exists()
     
-    def test_save_metadata_overwrites_existing(self, tmp_path):
+    def testSaveMetadataOverwritesExisting(self, tmp_path):
         """Overwrites existing metadata file"""
-        movie_name = "FakeMovie"
-        old_data = {"title": "Old Title"}
-        new_data = {"title": "New Title", "year": 2025}
+        movieName = "FakeMovie"
+        oldData = {"title": "Old Title"}
+        newData = {"title": "New Title", "year": 2025}
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveMetadata(movie_name, old_data)
-            itemsRepo.saveMetadata(movie_name, new_data)
+            itemsRepo.saveMetadata(movieName, oldData)
+            itemsRepo.saveMetadata(movieName, newData)
             
-            file_path = tmp_path / movie_name / "metadata.json"
-            content = json.loads(file_path.read_text(encoding="utf-8"))
-            assert content == new_data
+            filePath = tmp_path / movieName / "metadata.json"
+            content = json.loads(filePath.read_text(encoding="utf-8"))
+            assert content == newData
     
-    def test_save_metadata_with_unicode(self, tmp_path):
+    def testSaveMetadataWithUnicode(self, tmp_path):
         """Handles Unicode characters correctly"""
-        movie_name = "Amélie"
+        movieName = "Amélie"
         data = {"title": "Amélie", "director": "Jean-Pierre Jeunet"}
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveMetadata(movie_name, data)
+            itemsRepo.saveMetadata(movieName, data)
             
-            file_path = tmp_path / movie_name / "metadata.json"
-            content = json.loads(file_path.read_text(encoding="utf-8"))
+            filePath = tmp_path / movieName / "metadata.json"
+            content = json.loads(filePath.read_text(encoding="utf-8"))
             assert content["title"] == "Amélie"
     
-    def test_save_metadata_empty_dict(self, tmp_path):
+    def testSaveMetadataEmptyDict(self, tmp_path):
         """Handles empty metadata dictionary"""
-        movie_name = "EmptyMovie"
+        movieName = "EmptyMovie"
         data = {}
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveMetadata(movie_name, data)
+            itemsRepo.saveMetadata(movieName, data)
             
-            file_path = tmp_path / movie_name / "metadata.json"
-            content = json.loads(file_path.read_text(encoding="utf-8"))
+            filePath = tmp_path / movieName / "metadata.json"
+            content = json.loads(filePath.read_text(encoding="utf-8"))
             assert content == {}
     
-    def test_save_metadata_uses_atomic_write(self, tmp_path):
+    def testSaveMetadataUsesAtomicWrite(self, tmp_path):
         """Verifies atomic write using temporary file"""
-        movie_name = "FakeMovie"
+        movieName = "FakeMovie"
         data = {"title": "FakeMovie"}
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            with patch("os.replace") as mock_replace:
-                itemsRepo.saveMetadata(movie_name, data)
+            with patch("os.replace") as mockReplace:
+                itemsRepo.saveMetadata(movieName, data)
                 
                 # Verify os.replace was called (atomic operation)
-                assert mock_replace.called
+                assert mockReplace.called
 
 
 class TestSaveReviews:
     """Tests for saveReviews function"""
     
-    def test_save_reviews_writes_csv(self, tmp_path):
+    def testSaveReviewsWritesCsv(self, tmp_path):
         """Successfully writes reviews to CSV"""
-        movie_name = "FakeMovie"
+        movieName = "FakeMovie"
         reviews = [
             {"name": "Alice", "review": "Good"},
             {"name": "Bob", "review": "Great"}
         ]
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveReviews(movie_name, reviews)
+            itemsRepo.saveReviews(movieName, reviews)
             
-            file_path = tmp_path / movie_name / "movieReviews.csv"
-            assert file_path.exists()
+            filePath = tmp_path / movieName / "movieReviews.csv"
+            assert filePath.exists()
             
-            with file_path.open("r", encoding="utf-8") as f:
+            with filePath.open("r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 rows = list(reader)
                 assert len(rows) == 2
                 assert rows[0]["name"] == "Alice"
                 assert rows[1]["review"] == "Great"
     
-    def test_save_reviews_deletes_file_when_empty(self, tmp_path):
+    def testSaveReviewsDeletesFileWhenEmpty(self, tmp_path):
         """Deletes reviews file when list is empty"""
-        movie_name = "FakeMovie"
+        movieName = "FakeMovie"
         
-        movie_dir = tmp_path / movie_name
-        movie_dir.mkdir()
-        file_path = movie_dir / "movieReviews.csv"
-        file_path.touch()
-        assert file_path.exists()
+        movieDir = tmp_path / movieName
+        movieDir.mkdir()
+        filePath = movieDir / "movieReviews.csv"
+        filePath.touch()
+        assert filePath.exists()
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveReviews(movie_name, [])
-            assert not file_path.exists()
+            itemsRepo.saveReviews(movieName, [])
+            assert not filePath.exists()
     
-    def test_save_reviews_empty_list_no_file_exists(self, tmp_path):
+    def testSaveReviewsEmptyListNoFileExists(self, tmp_path):
         """Handles empty list when no file exists"""
-        movie_name = "FakeMovie"
+        movieName = "FakeMovie"
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
             # Should not raise an error
-            itemsRepo.saveReviews(movie_name, [])
+            itemsRepo.saveReviews(movieName, [])
             
-            file_path = tmp_path / movie_name / "movieReviews.csv"
-            assert not file_path.exists()
+            filePath = tmp_path / movieName / "movieReviews.csv"
+            assert not filePath.exists()
     
-    def test_save_reviews_with_special_characters(self, tmp_path):
+    def testSaveReviewsWithSpecialCharacters(self, tmp_path):
         """Handles reviews with special characters"""
-        movie_name = "FakeMovie"
+        movieName = "FakeMovie"
         reviews = [
             {"name": "Alice", "review": "Great, really \"amazing\"!"},
             {"name": "Bob", "review": "It's okay, not bad"}
         ]
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveReviews(movie_name, reviews)
+            itemsRepo.saveReviews(movieName, reviews)
             
-            file_path = tmp_path / movie_name / "movieReviews.csv"
-            with file_path.open("r", encoding="utf-8") as f:
+            filePath = tmp_path / movieName / "movieReviews.csv"
+            with filePath.open("r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 rows = list(reader)
                 assert rows[0]["review"] == "Great, really \"amazing\"!"
     
-    def test_save_reviews_with_unicode(self, tmp_path):
+    def testSaveReviewsWithUnicode(self, tmp_path):
         """Handles Unicode characters in reviews"""
-        movie_name = "FakeMovie"
+        movieName = "FakeMovie"
         reviews = [
             {"name": "Alice", "review": "Très bon!"},
             {"name": "Bob", "review": "Excelente película"}
         ]
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveReviews(movie_name, reviews)
+            itemsRepo.saveReviews(movieName, reviews)
             
-            file_path = tmp_path / movie_name / "movieReviews.csv"
-            with file_path.open("r", encoding="utf-8") as f:
+            filePath = tmp_path / movieName / "movieReviews.csv"
+            with filePath.open("r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 rows = list(reader)
                 assert rows[0]["review"] == "Très bon!"
     
-    def test_save_reviews_creates_directory(self, tmp_path):
+    def testSaveReviewsCreatesDirectory(self, tmp_path):
         """Creates directory if it doesn't exist"""
-        movie_name = "NewMovie"
+        movieName = "NewMovie"
         reviews = [{"name": "Alice", "review": "Good"}]
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            movie_dir = tmp_path / movie_name
-            assert not movie_dir.exists()
+            movieDir = tmp_path / movieName
+            assert not movieDir.exists()
             
-            itemsRepo.saveReviews(movie_name, reviews)
+            itemsRepo.saveReviews(movieName, reviews)
             
-            assert movie_dir.exists()
-            assert (movie_dir / "movieReviews.csv").exists()
+            assert movieDir.exists()
+            assert (movieDir / "movieReviews.csv").exists()
     
-    def test_save_reviews_uses_atomic_write(self, tmp_path):
+    def testSaveReviewsUsesAtomicWrite(self, tmp_path):
         """Verifies atomic write using temporary file"""
-        movie_name = "FakeMovie"
+        movieName = "FakeMovie"
         reviews = [{"name": "Alice", "review": "Good"}]
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            with patch("os.replace") as mock_replace:
-                itemsRepo.saveReviews(movie_name, reviews)
-                assert mock_replace.called
+            with patch("os.replace") as mockReplace:
+                itemsRepo.saveReviews(movieName, reviews)
+                assert mockReplace.called
     
-    def test_save_reviews_overwrites_existing(self, tmp_path):
+    def testSaveReviewsOverwritesExisting(self, tmp_path):
         """Overwrites existing reviews file"""
-        movie_name = "FakeMovie"
-        old_reviews = [{"name": "Alice", "review": "Good"}]
-        new_reviews = [
+        movieName = "FakeMovie"
+        oldReviews = [{"name": "Alice", "review": "Good"}]
+        newReviews = [
             {"name": "Bob", "review": "Great"},
             {"name": "Charlie", "review": "Amazing"}
         ]
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveReviews(movie_name, old_reviews)
-            itemsRepo.saveReviews(movie_name, new_reviews)
+            itemsRepo.saveReviews(movieName, oldReviews)
+            itemsRepo.saveReviews(movieName, newReviews)
             
-            file_path = tmp_path / movie_name / "movieReviews.csv"
-            with file_path.open("r", encoding="utf-8") as f:
+            filePath = tmp_path / movieName / "movieReviews.csv"
+            with filePath.open("r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 rows = list(reader)
                 assert len(rows) == 2
@@ -342,30 +342,30 @@ class TestSaveReviews:
 class TestIntegration:
     """Integration tests for complete workflows"""
     
-    def test_save_and_load_metadata_roundtrip(self, tmp_path):
+    def testSaveAndLoadMetadataRoundtrip(self, tmp_path):
         """Verify save and load metadata work together"""
-        movie_name = "TestMovie"
+        movieName = "TestMovie"
         data = {"title": "TestMovie", "year": 2025, "director": "John Doe"}
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveMetadata(movie_name, data)
-            loaded_data = itemsRepo.loadMetadata(movie_name)
-            assert loaded_data == data
+            itemsRepo.saveMetadata(movieName, data)
+            loadedData = itemsRepo.loadMetadata(movieName)
+            assert loadedData == data
     
-    def test_save_and_load_reviews_roundtrip(self, tmp_path):
+    def testSaveAndLoadReviewsRoundtrip(self, tmp_path):
         """Verify save and load reviews work together"""
-        movie_name = "TestMovie"
+        movieName = "TestMovie"
         reviews = [
             {"name": "Alice", "review": "Excellent"},
             {"name": "Bob", "review": "Good movie"}
         ]
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveReviews(movie_name, reviews)
-            loaded_reviews = itemsRepo.loadReviews(movie_name)
-            assert loaded_reviews == reviews
+            itemsRepo.saveReviews(movieName, reviews)
+            loadedReviews = itemsRepo.loadReviews(movieName)
+            assert loadedReviews == reviews
     
-    def test_multiple_movies_isolation(self, tmp_path):
+    def testMultipleMoviesIsolation(self, tmp_path):
         """Verify different movies don't interfere with each other"""
         movie1 = "Movie1"
         movie2 = "Movie2"
@@ -386,72 +386,72 @@ class TestIntegration:
 class TestEdgeCasesAndErrorHandling:
     """Additional edge cases and error scenarios"""
     
-    def test_load_metadata_file_read_permission_error(self):
+    def testLoadMetadataFileReadPermissionError(self):
         """Handles permission errors when reading metadata"""
         with patch("backend.repositories.itemsRepo.Path.exists", return_value=True), \
              patch("backend.repositories.itemsRepo.Path.open", side_effect=PermissionError("Access denied")):
             with pytest.raises(PermissionError):
                 itemsRepo.loadMetadata("FakeMovie")
     
-    def test_load_reviews_file_read_permission_error(self):
+    def testLoadReviewsFileReadPermissionError(self):
         """Handles permission errors when reading reviews"""
         with patch("backend.repositories.itemsRepo.Path.exists", return_value=True), \
              patch("backend.repositories.itemsRepo.Path.open", side_effect=PermissionError("Access denied")):
             with pytest.raises(PermissionError):
                 itemsRepo.loadReviews("FakeMovie")
     
-    def test_save_metadata_write_permission_error(self, tmp_path):
+    def testSaveMetadataWritePermissionError(self, tmp_path):
         """Handles permission errors when writing metadata"""
-        movie_name = "FakeMovie"
+        movieName = "FakeMovie"
         data = {"title": "FakeMovie"}
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
             # Create directory but make it read-only
-            movie_dir = tmp_path / movie_name
-            movie_dir.mkdir()
+            movieDir = tmp_path / movieName
+            movieDir.mkdir()
             
             with patch("backend.repositories.itemsRepo.Path.open", side_effect=PermissionError("Write denied")):
                 with pytest.raises(PermissionError):
-                    itemsRepo.saveMetadata(movie_name, data)
+                    itemsRepo.saveMetadata(movieName, data)
     
-    def test_save_reviews_write_permission_error(self, tmp_path):
+    def testSaveReviewsWritePermissionError(self, tmp_path):
         """Handles permission errors when writing reviews"""
-        movie_name = "FakeMovie"
+        movieName = "FakeMovie"
         reviews = [{"name": "Alice", "review": "Good"}]
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            movie_dir = tmp_path / movie_name
-            movie_dir.mkdir()
+            movieDir = tmp_path / movieName
+            movieDir.mkdir()
             
             with patch("backend.repositories.itemsRepo.Path.open", side_effect=PermissionError("Write denied")):
                 with pytest.raises(PermissionError):
-                    itemsRepo.saveReviews(movie_name, reviews)
+                    itemsRepo.saveReviews(movieName, reviews)
     
-    def test_save_metadata_directory_creation_error(self, tmp_path):
+    def testSaveMetadataDirectoryCreationError(self, tmp_path):
         """Handles errors when creating movie directory"""
-        movie_name = "FakeMovie"
+        movieName = "FakeMovie"
         data = {"title": "FakeMovie"}
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
             with patch("backend.repositories.itemsRepo.Path.mkdir", side_effect=OSError("Cannot create directory")):
                 with pytest.raises(OSError):
-                    itemsRepo.saveMetadata(movie_name, data)
+                    itemsRepo.saveMetadata(movieName, data)
     
-    def test_load_reviews_malformed_csv(self):
+    def testLoadReviewsMalformedCsv(self):
         """Handles malformed CSV data gracefully"""
         # CSV with inconsistent columns
-        csv_data = "name,review\nAlice,Good,Extra\nBob"
+        csvData = "name,review\nAlice,Good,Extra\nBob"
         
         with patch("backend.repositories.itemsRepo.Path.exists", return_value=True), \
-             patch("backend.repositories.itemsRepo.Path.open", mock_open(read_data=csv_data)):
+             patch("backend.repositories.itemsRepo.Path.open", mock_open(read_data=csvData)):
             # Should still load but may have unexpected structure
             result = itemsRepo.loadReviews("FakeMovie")
             # csv.DictReader is lenient, so this should work
             assert isinstance(result, list)
     
-    def test_save_metadata_with_nested_structures(self, tmp_path):
+    def testSaveMetadataWithNestedStructures(self, tmp_path):
         """Handles complex nested data structures"""
-        movie_name = "ComplexMovie"
+        movieName = "ComplexMovie"
         data = {
             "title": "Complex Movie",
             "cast": [
@@ -465,25 +465,25 @@ class TestEdgeCasesAndErrorHandling:
         }
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveMetadata(movie_name, data)
-            loaded_data = itemsRepo.loadMetadata(movie_name)
-            assert loaded_data == data
+            itemsRepo.saveMetadata(movieName, data)
+            loadedData = itemsRepo.loadMetadata(movieName)
+            assert loadedData == data
     
-    def test_save_reviews_with_extra_fields(self, tmp_path):
+    def testSaveReviewsWithExtraFields(self, tmp_path):
         """Handles reviews with varying field sets"""
-        movie_name = "FakeMovie"
+        movieName = "FakeMovie"
         reviews = [
             {"name": "Alice", "review": "Good", "rating": "5"},
             {"name": "Bob", "review": "Okay", "rating": "3"}
         ]
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveReviews(movie_name, reviews)
-            loaded_reviews = itemsRepo.loadReviews(movie_name)
-            assert len(loaded_reviews) == 2
-            assert "rating" in loaded_reviews[0]
+            itemsRepo.saveReviews(movieName, reviews)
+            loadedReviews = itemsRepo.loadReviews(movieName)
+            assert len(loadedReviews) == 2
+            assert "rating" in loadedReviews[0]
     
-    def test_load_metadata_encoding_error(self):
+    def testLoadMetadataEncodingError(self):
         """Handles encoding issues in metadata file"""
         # Invalid UTF-8 byte sequence
         with patch("backend.repositories.itemsRepo.Path.exists", return_value=True):
@@ -495,9 +495,9 @@ class TestEdgeCasesAndErrorHandling:
                 with pytest.raises(UnicodeDecodeError):
                     itemsRepo.loadMetadata("FakeMovie")
     
-    def test_save_metadata_with_non_serializable_data(self, tmp_path):
+    def testSaveMetadataWithNonSerializableData(self, tmp_path):
         """Handles non-JSON-serializable data"""
-        movie_name = "FakeMovie"
+        movieName = "FakeMovie"
         
         # Create a non-serializable object
         class NonSerializable:
@@ -507,54 +507,54 @@ class TestEdgeCasesAndErrorHandling:
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
             with pytest.raises(TypeError):
-                itemsRepo.saveMetadata(movie_name, data)
+                itemsRepo.saveMetadata(movieName, data)
     
-    def test_base_dir_is_path_object(self):
+    def testBaseDirIsPathObject(self):
         """Verifies baseDir is a Path object"""
         assert isinstance(itemsRepo.baseDir, Path)
     
-    def test_get_movie_dir_returns_path_object(self):
+    def testGetMovieDirReturnsPathObject(self):
         """Verifies getMovieDir returns Path object"""
         result = itemsRepo.getMovieDir("TestMovie")
         assert isinstance(result, Path)
     
-    def test_save_reviews_delete_handles_permission_error(self, tmp_path):
+    def testSaveReviewsDeleteHandlesPermissionError(self, tmp_path):
         """Handles permission error when trying to delete empty reviews file"""
-        movie_name = "FakeMovie"
+        movieName = "FakeMovie"
         
-        movie_dir = tmp_path / movie_name
-        movie_dir.mkdir()
-        file_path = movie_dir / "movieReviews.csv"
-        file_path.touch()
+        movieDir = tmp_path / movieName
+        movieDir.mkdir()
+        filePath = movieDir / "movieReviews.csv"
+        filePath.touch()
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
             with patch("backend.repositories.itemsRepo.Path.unlink", side_effect=PermissionError("Cannot delete")):
                 with pytest.raises(PermissionError):
-                    itemsRepo.saveReviews(movie_name, [])
+                    itemsRepo.saveReviews(movieName, [])
     
-    def test_save_metadata_os_replace_failure(self, tmp_path):
+    def testSaveMetadataOsReplaceFailure(self, tmp_path):
         """Handles os.replace failure"""
-        movie_name = "FakeMovie"
+        movieName = "FakeMovie"
         data = {"title": "FakeMovie"}
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
             with patch("os.replace", side_effect=OSError("Replace failed")):
                 with pytest.raises(OSError):
-                    itemsRepo.saveMetadata(movie_name, data)
+                    itemsRepo.saveMetadata(movieName, data)
     
-    def test_save_reviews_os_replace_failure(self, tmp_path):
+    def testSaveReviewsOsReplaceFailure(self, tmp_path):
         """Handles os.replace failure for reviews"""
-        movie_name = "FakeMovie"
+        movieName = "FakeMovie"
         reviews = [{"name": "Alice", "review": "Good"}]
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
             with patch("os.replace", side_effect=OSError("Replace failed")):
                 with pytest.raises(OSError):
-                    itemsRepo.saveReviews(movie_name, reviews)
+                    itemsRepo.saveReviews(movieName, reviews)
     
-    def test_load_metadata_with_very_large_file(self, tmp_path):
+    def testLoadMetadataWithVeryLargeFile(self, tmp_path):
         """Handles large metadata files"""
-        movie_name = "LargeMovie"
+        movieName = "LargeMovie"
         # Create large data structure
         data = {
             "title": "Large Movie",
@@ -562,49 +562,49 @@ class TestEdgeCasesAndErrorHandling:
         }
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveMetadata(movie_name, data)
-            loaded_data = itemsRepo.loadMetadata(movie_name)
-            assert len(loaded_data["cast"]) == 1000
+            itemsRepo.saveMetadata(movieName, data)
+            loadedData = itemsRepo.loadMetadata(movieName)
+            assert len(loadedData["cast"]) == 1000
     
-    def test_load_reviews_with_many_reviews(self, tmp_path):
+    def testLoadReviewsWithManyReviews(self, tmp_path):
         """Handles CSV files with many reviews"""
-        movie_name = "PopularMovie"
+        movieName = "PopularMovie"
         reviews = [
             {"name": f"User{i}", "review": f"Review {i}"}
             for i in range(100)
         ]
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveReviews(movie_name, reviews)
-            loaded_reviews = itemsRepo.loadReviews(movie_name)
-            assert len(loaded_reviews) == 100
+            itemsRepo.saveReviews(movieName, reviews)
+            loadedReviews = itemsRepo.loadReviews(movieName)
+            assert len(loadedReviews) == 100
 
 
 class TestRealFileSystemOperations:
     """Tests using actual file system (not mocked) to ensure real behavior"""
     
-    def test_save_metadata_creates_actual_file(self, tmp_path):
+    def testSaveMetadataCreatesActualFile(self, tmp_path):
         """Integration test: actually write and read metadata file"""
-        movie_name = "RealMovie"
+        movieName = "RealMovie"
         data = {"title": "Real Movie", "year": 2025}
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
             # Save the metadata
-            itemsRepo.saveMetadata(movie_name, data)
+            itemsRepo.saveMetadata(movieName, data)
             
             # Verify file was created
-            metadata_file = tmp_path / movie_name / "metadata.json"
-            assert metadata_file.exists()
-            assert metadata_file.is_file()
+            metadataFile = tmp_path / movieName / "metadata.json"
+            assert metadataFile.exists()
+            assert metadataFile.is_file()
             
             # Verify content without using loadMetadata
-            with open(metadata_file, 'r', encoding='utf-8') as f:
+            with open(metadataFile, 'r', encoding='utf-8') as f:
                 content = json.load(f)
             assert content == data
     
-    def test_save_reviews_creates_actual_csv(self, tmp_path):
+    def testSaveReviewsCreatesActualCsv(self, tmp_path):
         """Integration test: actually write and read CSV file"""
-        movie_name = "RealMovie"
+        movieName = "RealMovie"
         reviews = [
             {"name": "Alice", "review": "Great"},
             {"name": "Bob", "review": "Good"}
@@ -612,91 +612,91 @@ class TestRealFileSystemOperations:
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
             # Save reviews
-            itemsRepo.saveReviews(movie_name, reviews)
+            itemsRepo.saveReviews(movieName, reviews)
             
             # Verify file was created
-            reviews_file = tmp_path / movie_name / "movieReviews.csv"
-            assert reviews_file.exists()
-            assert reviews_file.is_file()
+            reviewsFile = tmp_path / movieName / "movieReviews.csv"
+            assert reviewsFile.exists()
+            assert reviewsFile.is_file()
             
             # Verify content without using loadReviews
-            with open(reviews_file, 'r', encoding='utf-8', newline='') as f:
+            with open(reviewsFile, 'r', encoding='utf-8', newline='') as f:
                 reader = csv.DictReader(f)
                 rows = list(reader)
             assert len(rows) == 2
             assert rows[0]["name"] == "Alice"
     
-    def test_metadata_file_format_correct(self, tmp_path):
+    def testMetadataFileFormatCorrect(self, tmp_path):
         """Verify metadata JSON is properly formatted"""
-        movie_name = "FormattedMovie"
+        movieName = "FormattedMovie"
         data = {"title": "Test", "year": 2025}
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveMetadata(movie_name, data)
+            itemsRepo.saveMetadata(movieName, data)
             
-            metadata_file = tmp_path / movie_name / "metadata.json"
-            content = metadata_file.read_text(encoding='utf-8')
+            metadataFile = tmp_path / movieName / "metadata.json"
+            content = metadataFile.read_text(encoding='utf-8')
             
             # Check it's indented (indent=2)
             assert '\n' in content
             assert '  ' in content  # Should have 2-space indentation
     
-    def test_reviews_csv_has_proper_headers(self, tmp_path):
+    def testReviewsCsvHasProperHeaders(self, tmp_path):
         """Verify CSV file has correct headers"""
-        movie_name = "HeaderMovie"
+        movieName = "HeaderMovie"
         reviews = [{"name": "Alice", "review": "Good", "rating": "5"}]
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveReviews(movie_name, reviews)
+            itemsRepo.saveReviews(movieName, reviews)
             
-            reviews_file = tmp_path / movie_name / "movieReviews.csv"
-            with open(reviews_file, 'r', encoding='utf-8') as f:
-                first_line = f.readline().strip()
+            reviewsFile = tmp_path / movieName / "movieReviews.csv"
+            with open(reviewsFile, 'r', encoding='utf-8') as f:
+                firstLine = f.readline().strip()
             
             # Headers should match the dict keys
-            assert "name" in first_line
-            assert "review" in first_line
-            assert "rating" in first_line
+            assert "name" in firstLine
+            assert "review" in firstLine
+            assert "rating" in firstLine
     
-    def test_atomic_write_temp_file_cleanup(self, tmp_path):
+    def testAtomicWriteTempFileCleanup(self, tmp_path):
         """Verify temporary files are cleaned up after successful write"""
-        movie_name = "TempFileMovie"
+        movieName = "TempFileMovie"
         data = {"title": "Test"}
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveMetadata(movie_name, data)
+            itemsRepo.saveMetadata(movieName, data)
             
-            movie_dir = tmp_path / movie_name
+            movieDir = tmp_path / movieName
             # Check no .tmp files remain
-            tmp_files = list(movie_dir.glob("*.tmp"))
-            assert len(tmp_files) == 0
+            tmpFiles = list(movieDir.glob("*.tmp"))
+            assert len(tmpFiles) == 0
     
-    def test_save_reviews_atomic_write_temp_cleanup(self, tmp_path):
+    def testSaveReviewsAtomicWriteTempCleanup(self, tmp_path):
         """Verify temporary CSV files are cleaned up"""
-        movie_name = "TempCSVMovie"
+        movieName = "TempCSVMovie"
         reviews = [{"name": "Alice", "review": "Good"}]
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveReviews(movie_name, reviews)
+            itemsRepo.saveReviews(movieName, reviews)
             
-            movie_dir = tmp_path / movie_name
+            movieDir = tmp_path / movieName
             # Check no .tmp files remain
-            tmp_files = list(movie_dir.glob("*.tmp"))
-            assert len(tmp_files) == 0
+            tmpFiles = list(movieDir.glob("*.tmp"))
+            assert len(tmpFiles) == 0
     
-    def test_concurrent_saves_last_write_wins(self, tmp_path):
+    def testConcurrentSavesLastWriteWins(self, tmp_path):
         """Verify last write wins when saving multiple times"""
-        movie_name = "ConcurrentMovie"
+        movieName = "ConcurrentMovie"
         data1 = {"title": "First", "version": 1}
         data2 = {"title": "Second", "version": 2}
         data3 = {"title": "Third", "version": 3}
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveMetadata(movie_name, data1)
-            itemsRepo.saveMetadata(movie_name, data2)
-            itemsRepo.saveMetadata(movie_name, data3)
+            itemsRepo.saveMetadata(movieName, data1)
+            itemsRepo.saveMetadata(movieName, data2)
+            itemsRepo.saveMetadata(movieName, data3)
             
-            loaded = itemsRepo.loadMetadata(movie_name)
+            loaded = itemsRepo.loadMetadata(movieName)
             assert loaded == data3
             assert loaded["version"] == 3
 
@@ -704,109 +704,109 @@ class TestRealFileSystemOperations:
 class TestPathOperations:
     """Tests focusing on path handling and structure"""
     
-    def test_base_dir_structure(self):
+    def testBaseDirStructure(self):
         """Verify baseDir points to correct location"""
         # baseDir should be parent/parent/data from the repo file
         assert itemsRepo.baseDir.name == "data"
         assert itemsRepo.baseDir.is_absolute()
     
-    def test_get_movie_dir_preserves_case(self):
+    def testGetMovieDirPreservesCase(self):
         """Verify movie names are preserved in paths (case may vary by OS)"""
         import platform
         
-        movie_lower = "testmovie"
-        movie_upper = "TESTMOVIE"
-        movie_mixed = "TestMovie"
+        movieLower = "testmovie"
+        movieUpper = "TESTMOVIE"
+        movieMixed = "TestMovie"
         
-        path_lower = itemsRepo.getMovieDir(movie_lower)
-        path_upper = itemsRepo.getMovieDir(movie_upper)
-        path_mixed = itemsRepo.getMovieDir(movie_mixed)
+        pathLower = itemsRepo.getMovieDir(movieLower)
+        pathUpper = itemsRepo.getMovieDir(movieUpper)
+        pathMixed = itemsRepo.getMovieDir(movieMixed)
         
         # On case-sensitive filesystems (Linux/Mac), paths should differ
         # On Windows, paths may be equal but the movie name is still preserved
         if platform.system() != "Windows":
-            assert path_lower != path_upper
-            assert path_lower != path_mixed
-            assert path_upper != path_mixed
+            assert pathLower != pathUpper
+            assert pathLower != pathMixed
+            assert pathUpper != pathMixed
         else:
             # On Windows, verify the movie name is at least in the path string
-            assert movie_lower in str(path_lower).lower()
-            assert movie_upper.lower() in str(path_upper).lower()
-            assert movie_mixed.lower() in str(path_mixed).lower()
+            assert movieLower in str(pathLower).lower()
+            assert movieUpper.lower() in str(pathUpper).lower()
+            assert movieMixed.lower() in str(pathMixed).lower()
     
-    def test_metadata_path_construction(self):
+    def testMetadataPathConstruction(self):
         """Verify metadata.json path is constructed correctly"""
-        movie_name = "TestMovie"
-        expected = itemsRepo.baseDir / movie_name / "metadata.json"
+        movieName = "TestMovie"
+        expected = itemsRepo.baseDir / movieName / "metadata.json"
         
         # We can verify this by checking what getMovieDir returns
-        movie_dir = itemsRepo.getMovieDir(movie_name)
-        assert movie_dir / "metadata.json" == expected
+        movieDir = itemsRepo.getMovieDir(movieName)
+        assert movieDir / "metadata.json" == expected
     
-    def test_reviews_path_construction(self):
+    def testReviewsPathConstruction(self):
         """Verify movieReviews.csv path is constructed correctly"""
-        movie_name = "TestMovie"
-        expected = itemsRepo.baseDir / movie_name / "movieReviews.csv"
+        movieName = "TestMovie"
+        expected = itemsRepo.baseDir / movieName / "movieReviews.csv"
         
-        movie_dir = itemsRepo.getMovieDir(movie_name)
-        assert movie_dir / "movieReviews.csv" == expected
+        movieDir = itemsRepo.getMovieDir(movieName)
+        assert movieDir / "movieReviews.csv" == expected
 
 
 class TestBoundaryConditions:
     """Tests for boundary conditions and extreme values"""
     
-    def test_empty_movie_name(self):
+    def testEmptyMovieName(self):
         """Handle empty string as movie name"""
-        movie_name = ""
-        path = itemsRepo.getMovieDir(movie_name)
+        movieName = ""
+        path = itemsRepo.getMovieDir(movieName)
         # Should still work, just creates path with empty name
         assert path == itemsRepo.baseDir / ""
     
-    def test_very_long_movie_name(self):
+    def testVeryLongMovieName(self):
         """Handle very long movie names"""
-        movie_name = "A" * 255  # Max filename length on most systems
-        path = itemsRepo.getMovieDir(movie_name)
-        assert movie_name in str(path)
+        movieName = "A" * 255  # Max filename length on most systems
+        path = itemsRepo.getMovieDir(movieName)
+        assert movieName in str(path)
     
-    def test_metadata_with_null_values(self, tmp_path):
+    def testMetadataWithNullValues(self, tmp_path):
         """Handle null values in metadata"""
-        movie_name = "NullMovie"
+        movieName = "NullMovie"
         data = {"title": "Test", "director": None, "year": None}
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveMetadata(movie_name, data)
-            loaded = itemsRepo.loadMetadata(movie_name)
+            itemsRepo.saveMetadata(movieName, data)
+            loaded = itemsRepo.loadMetadata(movieName)
             assert loaded["director"] is None
             assert loaded["year"] is None
     
-    def test_reviews_with_empty_strings(self, tmp_path):
+    def testReviewsWithEmptyStrings(self, tmp_path):
         """Handle empty strings in review fields"""
-        movie_name = "EmptyFieldsMovie"
+        movieName = "EmptyFieldsMovie"
         reviews = [
             {"name": "", "review": ""},
             {"name": "Bob", "review": ""}
         ]
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveReviews(movie_name, reviews)
-            loaded = itemsRepo.loadReviews(movie_name)
+            itemsRepo.saveReviews(movieName, reviews)
+            loaded = itemsRepo.loadReviews(movieName)
             assert loaded[0]["name"] == ""
             assert loaded[0]["review"] == ""
     
-    def test_metadata_with_boolean_values(self, tmp_path):
+    def testMetadataWithBooleanValues(self, tmp_path):
         """Handle boolean values in metadata"""
-        movie_name = "BoolMovie"
+        movieName = "BoolMovie"
         data = {"title": "Test", "available": True, "restricted": False}
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveMetadata(movie_name, data)
-            loaded = itemsRepo.loadMetadata(movie_name)
+            itemsRepo.saveMetadata(movieName, data)
+            loaded = itemsRepo.loadMetadata(movieName)
             assert loaded["available"] is True
             assert loaded["restricted"] is False
     
-    def test_metadata_with_numeric_values(self, tmp_path):
+    def testMetadataWithNumericValues(self, tmp_path):
         """Handle various numeric types in metadata"""
-        movie_name = "NumericMovie"
+        movieName = "NumericMovie"
         data = {
             "title": "Test",
             "year": 2025,
@@ -816,26 +816,26 @@ class TestBoundaryConditions:
         }
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveMetadata(movie_name, data)
-            loaded = itemsRepo.loadMetadata(movie_name)
+            itemsRepo.saveMetadata(movieName, data)
+            loaded = itemsRepo.loadMetadata(movieName)
             assert loaded["year"] == 2025
             assert loaded["rating"] == 8.5
             assert loaded["budget"] == 1000000
     
-    def test_reviews_single_column(self, tmp_path):
+    def testReviewsSingleColumn(self, tmp_path):
         """Handle reviews with only one field"""
-        movie_name = "SingleColumnMovie"
+        movieName = "SingleColumnMovie"
         reviews = [{"review": "Good"}, {"review": "Bad"}]
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveReviews(movie_name, reviews)
-            loaded = itemsRepo.loadReviews(movie_name)
+            itemsRepo.saveReviews(movieName, reviews)
+            loaded = itemsRepo.loadReviews(movieName)
             assert len(loaded) == 2
             assert "review" in loaded[0]
     
-    def test_metadata_with_array_values(self, tmp_path):
+    def testMetadataWithArrayValues(self, tmp_path):
         """Handle arrays in metadata"""
-        movie_name = "ArrayMovie"
+        movieName = "ArrayMovie"
         data = {
             "title": "Test",
             "genres": ["Action", "Comedy", "Drama"],
@@ -843,7 +843,7 @@ class TestBoundaryConditions:
         }
         
         with patch("backend.repositories.itemsRepo.baseDir", tmp_path):
-            itemsRepo.saveMetadata(movie_name, data)
-            loaded = itemsRepo.loadMetadata(movie_name)
+            itemsRepo.saveMetadata(movieName, data)
+            loaded = itemsRepo.loadMetadata(movieName)
             assert loaded["genres"] == ["Action", "Comedy", "Drama"]
             assert len(loaded["cast"]) == 2
