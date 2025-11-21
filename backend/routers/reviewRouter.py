@@ -64,12 +64,20 @@ def updateReview(title: str, index: int, updated_data: movieReviewsUpdate):
 
 # delete review
 @router.delete("/{title}/review/{index}")
-def deleteReview(title: str, index: int):
+def deleteReview(title: str, index: int, deletedBy):
     """Delete a review by index for a specific movie."""
     reviews = movieReviews_memory.get(title.lower(), [])
     if not reviews or index >= len(reviews):
         raise HTTPException(status_code=404, detail="Review not found")
-
+    
+    # Retrieve the review object
+    review_to_remove = reviews[index]
+    
+    # Check if deletedBy is either the creator or an admin
+    if deletedBy.username != review_to_remove.user and getattr(deletedBy, "role", None) != "admin":
+        raise HTTPException(status_code=403, detail="You do not have permission to delete this review")
+    
+    #remove review
     removed = reviews.pop(index)
     movieReviews_memory[title.lower()] = reviews
     return {"message": f"Deleted review '{removed.reviewTitle}' by {removed.user}"}
