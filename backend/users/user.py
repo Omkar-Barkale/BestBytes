@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Optional
 from datetime import datetime, timedelta
 import threading
+from services.userServices import saveUserToDB
 
 #pylint: disable = C0303
 class User:
@@ -58,7 +59,7 @@ class User:
         self.lastLogin = None
 
         if save:
-            self.saveUserToDB(path)
+            saveUserToDB(path)
         
     
     
@@ -193,26 +194,5 @@ class User:
                     # Session expired, remove it
                     del cls.activeSessions[sessionToken]
             return None
-    def saveUserToDB(self,path: Path):
-        newUser ={
-            self.username:{
-            "email":self.email,
-            "password":self.passwordHash}
-        }
-
-        print(newUser)
-        data = {}
-        if path.exists():
-            with open(path, 'r+') as jsonFile:
-                try:
-                    data = json.load(jsonFile)
-                except json.JSONDecodeError:
-                    data = {}
-                
-                data.update(newUser)
-                print(data)
-
-                jsonFile.seek(0)
-                json.dump(data,jsonFile, indent = 2)
-                jsonFile.truncate()
+    
                
