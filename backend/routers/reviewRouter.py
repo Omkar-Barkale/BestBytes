@@ -90,13 +90,17 @@ def deleteReview(title: str, index: int, sessionToken: str):
     if not os.path.exists(movie_folder):
         raise HTTPException(status_code=404, detail=f"Movie '{title}' not found")
     
+    # Get the list of reviews
     reviews = movieReviews_memory.get(title.lower(), [])
     if not reviews or index >= len(reviews):
         raise HTTPException(status_code=404, detail="Review not found")
     
-    if reviews[index].user.lower() != current_user.username.lower():
+    review_to_remove = reviews[index]
+    # Allow deletion if current_user is the creator or is an admin
+    if (current_user.username.lower() != review_to_remove.user.lower() 
+            and getattr(current_user, "role", None) != "admin"):
         raise HTTPException(status_code=403, detail="You can't delete others' reviews")
-
+   
     removed = reviews.pop(index)
     movieReviews_memory[title.lower()] = reviews
     return {"message": f"Deleted review '{removed.reviewTitle}' by {removed.user}"}

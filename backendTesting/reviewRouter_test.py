@@ -334,3 +334,59 @@ class TestDeleteReview:
         assert response.status_code == 403
         assert response.json()["detail"] == "You can't delete others' reviews"
 
+    def test_delete_review_admin_override(self, tmp_path, monkeypatch):
+        #Admin can delete any user's review (success)
+
+        # movie folder
+        movie_dir = tmp_path / "Joker"
+        movie_dir.mkdir()
+        (movie_dir / "metadata.json").write_text("{}", encoding="utf-8")
+
+        # data path
+        monkeypatch.setattr("backend.routers.reviewRouter.DATA_PATH", str(tmp_path))
+
+        # one review by ADMIN
+        movieReviews_memory["joker"] = [
+            movieReviews(**{**DUMMY_REVIEW, "user": "ADMIN"})
+        ]
+
+        # mock admin user
+        monkeypatch.setattr(
+            "backend.users.user.User.getCurrentUser",
+            lambda *a, **k: type("U", (), {"username": "AdminUser", "role": "admin"})
+        )
+
+        response = client.delete("/Joker/review/0?sessionToken=admin123")
+
+        assert response.status_code == 200
+        assert "Deleted review" in response.json()["message"]
+        assert movieReviews_memory["joker"] == []
+
+
+    def test_delete_review_user_not_admin_forbidden(self, tmp_path, monkeypatch):
+        #Normal user tries to delete another user's review -> 403
+
+        movie_dir = tmp_path / "Joker"
+        movie_dir.mkdir()
+        (movie_dir / "metadata.json").write_text("{}", encoding="utf-8")
+
+        monkeypatch.setattr("backend.routers.reviewRouter.DATA_PATH", str(tmp_path))
+
+        # review belongs to USER
+        movieReviews_memory["joker"] = [
+            movieReviews(**{**DUMMY_REVIEW, "user": "USER"})
+        ]
+
+        # current_user is NOT admin and not the review owner
+        monkeypatch.setattr(
+            "backend.users.user.User.getCurrentUser",
+            lambda *a, **k: type("U", (), {"username": "RandomUser", "role": "user"})
+        )
+
+        response = client.delete("/Joker/review/0?sessionToken=user123")
+
+        assert response.status_code == 403
+        assert response.json()["detail"] == "You can't delete others' reviews"
+
+
+
