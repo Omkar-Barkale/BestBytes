@@ -67,3 +67,22 @@ def removeMovieFromList(username: str, listName: str, movieTitle: str, sessionTo
 
     userMovieLists[username.lower()][listName].remove(movieTitle)
     return {"message": f"Removed '{movieTitle}' from list '{listName}'"}
+
+# delete entire list
+@router.delete("/delete")
+def deleteList(username: str, listName: str, sessionToken: str):
+    """Delete an entire movie list for a user."""
+    current_user = User.getCurrentUser(User, sessionToken)
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Login required to Delete Lists")
+
+    username_key = username.lower()
+
+    if username_key not in userMovieLists:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if listName not in userMovieLists[username_key]:
+        raise HTTPException(status_code=404, detail="List not found")
+
+    del userMovieLists[username_key][listName]
+    return {"message": f"Deleted list '{listName}' for {username}"}
