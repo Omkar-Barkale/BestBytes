@@ -461,3 +461,93 @@ class TestRemoveMovieFromList:
 
         from backend.routers.listsRouter import userMovieLists
         assert "Joker" not in userMovieLists["khushi"]["Favorites"]
+
+# deletes the entire list
+class TestDeleteList:
+    """Tests for DELETE /delete endpoint"""
+
+    @pytest.fixture(autouse=True)
+    def setup_lists(self, mock_valid_user):
+        # create user + 2 lists
+        client.post("/create", params={
+            "username": "khushi",
+            "listName": "Fav",
+            "sessionToken": "abc"
+        })
+        client.post("/create", params={
+            "username": "khushi",
+            "listName": "Watch",
+            "sessionToken": "abc"
+        })
+
+    def test_delete_list_success(self, mock_valid_user):
+        response = client.delete(
+            "/delete",
+            params={
+                "username": "khushi",
+                "listName": "Fav",
+                "sessionToken": "abc"
+            }
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {"message": "Deleted list 'Fav' for khushi"}
+
+        from backend.routers.listsRouter import userMovieLists
+        assert "Fav" not in userMovieLists["khushi"]
+
+    def test_delete_list_not_found(self, mock_valid_user):
+        response = client.delete(
+            "/delete",
+            params={
+                "username": "khushi",
+                "listName": "DoesNotExist",
+                "sessionToken": "abc"
+            }
+        )
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "List not found"
+
+    def test_delete_user_not_found(self, mock_valid_user):
+        response = client.delete(
+            "/delete",
+            params={
+                "username": "unknownUser",
+                "listName": "Fav",
+                "sessionToken": "abc"
+            }
+        )
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "User not found"
+
+    def test_delete_list_unauthenticated(self, mock_invalid_user):
+        response = client.delete(
+            "/delete",
+            params={
+                "username": "khushi",
+                "listName": "Fav",
+                "sessionToken": "wrong"
+            }
+        )
+
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Login required to Delete Lists"
+
+    def test_delete_list_case_insensitive(self, mock_valid_user):
+        response = client.delete(
+            "/delete",
+            params={
+                "username": "KhUsHi",
+                "listName": "Watch",
+                "sessionToken": "abc"
+            }
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {"message": "Deleted list 'Watch' for KhUsHi"}
+
+        from backend.routers.listsRouter import userMovieLists
+        assert "Watch" not in userMovieLists["khushi"]
+
