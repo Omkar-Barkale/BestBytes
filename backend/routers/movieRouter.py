@@ -59,14 +59,27 @@ def get_movie_by_title(title: str):
 @router.post("/{title}/review", response_model=movieReviews)
 def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str):
     """Add a review"""
+    
+    # CHECK: User authentication
     current_user = User.getCurrentUser(User, sessionToken)
     if not current_user: 
         raise HTTPException(status_code=401, detail="Login required to review")
     
+    # CHECK: Movie exists
     movie_folder = os.path.join(DATA_PATH, title)
     if not os.path.exists(movie_folder):
         raise HTTPException(status_code=404, detail=f"Movie '{title}' not found")
 
+    # CHECK: Review title and text are not empty
+    if not review_data.reviewTitle.strip() or not review_data.reviewText.strip():
+        raise HTTPException(status_code=400, detail="Review title and text cannot be empty")
+    
+    # CHECK: Prevent duplicate review by same user for the same movie
+    existing_reviews = movie_reviews_memory.get(title.lower(), [])
+    for r in existing_reviews:
+        if r.user.lower() == current_user.username.lower():
+            raise HTTPException(status_code=400, detail="You have already reviewed this movie")
+    
     review = movieReviews(**review_data.dict())
     movie_reviews_memory.setdefault(title.lower(), []).append(review)
     return review
