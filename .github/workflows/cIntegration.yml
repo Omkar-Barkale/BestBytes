@@ -30,6 +30,7 @@ jobs:
           python -m pip install pytest-cov
           python -m pip install fastapi
           python -m pip install bcrypt
+          python -m pip install httpx
             
 
       - name: Run tests
