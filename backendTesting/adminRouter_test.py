@@ -369,7 +369,32 @@ class TestDeleteMovie:
         # After deletion review must be removed
         assert "samplemovie" not in adminRouter.movieReviews_memory
 
-    
+    # CHECK: movie is deleted from user's list
+    def testDeleteMovieRemovesFromUserLists(self, tempDataPath, monkeypatch):
+        """Ensures movie is removed from all user watch lists"""
+        from backend.routers import adminRouter
+        monkeypatch.setattr(adminRouter, "DATA_PATH", tempDataPath)
+
+        movieFolder = os.path.join(tempDataPath, "SomeMovie")
+        os.makedirs(movieFolder)
+
+        # test user lists containing the movie
+        adminRouter.userMovieLists.clear()
+        adminRouter.userMovieLists.update({
+            "user1": { "favorites": ["SomeMovie", "AnotherMovie"] },
+            "user2": { "history": ["RandomMovie", "SomeMovie"] }
+        })
+
+        mockAdmin = MagicMock(role="admin")
+        monkeypatch.setattr(adminRouter.User, "getCurrentUser", lambda _, __: mockAdmin)
+
+        response = client.delete("/delete-movie/SomeMovie?sessionToken=adminToken")
+        assert response.status_code == 200
+
+        # Movie must be removed everywhere
+        assert "SomeMovie" not in adminRouter.userMovieLists["user1"]["favorites"]
+        assert "SomeMovie" not in adminRouter.userMovieLists["user2"]["history"]
+
 
 
 class TestAssignPenalty:
