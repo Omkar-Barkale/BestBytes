@@ -2,7 +2,7 @@ import pytest
 import sys
 from pathlib import Path
 import json
-from backend.users import User
+from backend.users.user import User
 from backend.users.penaltyPoints import PenaltyPoints
 from unittest.mock import mock_open, patch, MagicMock
 from unittest import TestCase
