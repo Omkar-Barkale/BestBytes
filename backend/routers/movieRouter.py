@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 from typing import List
 from backend.schemas.movie import movie
 from backend.schemas.movieReviews import movieReviews, movieReviewsCreate
+from backend.users.user import User
 
 router = APIRouter()
 
@@ -58,7 +59,6 @@ def get_movie_by_title(title: str):
 @router.post("/{title}/review", response_model=movieReviews)
 def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str):
     """Add a review"""
-    from users.user import User
     current_user = User.getCurrentUser(User, sessionToken)
     if not current_user: 
         raise HTTPException(status_code=401, detail="Login required to review")

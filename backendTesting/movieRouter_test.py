@@ -175,4 +175,118 @@ class TestGetMovieByTitle:
         response = client.get("/Joker")
         assert response.status_code == 200
         assert response.json()["reviews"][0]["review"] == "Amazing movie!"
+DUMMY_REVIEW = {
+    "dateOfReview": "2024-01-01",
+    "user": "X",
+    "usefulnessVote": 0,
+    "totalVotes": 0,
+    "userRatingOutOf10": 5,
+    "reviewTitle": "Test",
+    "review": "Test"
+}
 
+class TestAddReview:
+    """Tests for POST /{title}/review endpoint"""
+
+    def test_add_review_success(self, tmp_path, monkeypatch):
+        """Valid user + valid movie folder -> review saved"""
+        from backend.routers import movieRouter
+        movieRouter.movie_reviews_memory.clear()
+
+        # create dir with data
+        movie_dir = tmp_path / "Joker"
+        movie_dir.mkdir()
+        (movie_dir / "metadata.json").write_text(json.dumps(JOKER_METADATA), encoding="utf-8")
+
+        monkeypatch.setattr("backend.routers.movieRouter.DATA_PATH", str(tmp_path))
+
+        review_payload = {
+            "dateOfReview": "2024-01-01",
+            "user": "Khushi",
+            "usefulnessVote": 3,
+            "totalVotes": 5,
+            "userRatingOutOf10": 9,
+            "reviewTitle": "Great!",
+            "review": "Amazing movie!"
+        }
+
+        with patch("backend.routers.movieRouter.User.getCurrentUser", return_value={"username": "Khushi"}):
+            response = client.post("/Joker/review?sessionToken=abc", json=review_payload)
+
+        assert response.status_code == 200
+        assert response.json()["review"] == "Amazing movie!"
+
+    def test_add_review_unauthenticated(self, tmp_path, monkeypatch):
+        """If user is not logged in -> 401 BEFORE validating payload"""
+
+        movie_dir = tmp_path / "Joker"
+        movie_dir.mkdir()
+        (movie_dir / "metadata.json").write_text(json.dumps(JOKER_METADATA), encoding="utf-8")
+
+        monkeypatch.setattr("backend.routers.movieRouter.DATA_PATH", str(tmp_path))
+
+        dummy_payload = {
+            "dateOfReview": "2024-01-01",
+            "user": "X",
+            "usefulnessVote": 0,
+            "totalVotes": 0,
+            "userRatingOutOf10": 5,
+            "reviewTitle": "Test",
+            "review": "Test"
+        }
+
+        with patch("backend.routers.movieRouter.User.getCurrentUser", return_value=None):
+            response = client.post("/Joker/review?sessionToken=bad", json=dummy_payload)
+
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Login required to review"
+
+    def test_add_review_movie_not_found(self, tmp_path, monkeypatch):
+        """If movie folder does not exist -> 404 BEFORE validating payload"""
+
+        monkeypatch.setattr("backend.routers.movieRouter.DATA_PATH", str(tmp_path))
+
+        payload = {
+            "dateOfReview": "2024-01-01",
+            "user": "Khushi",
+            "usefulnessVote": 1,
+            "totalVotes": 2,
+            "userRatingOutOf10": 7,
+            "reviewTitle": "Nice",
+            "review": "Good"
+        }
+
+        with patch("backend.routers.movieRouter.User.getCurrentUser", return_value={"username": "Khushi"}):
+            response = client.post("/UnknownMovie/review?sessionToken=abc", json=payload)
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Movie 'UnknownMovie' not found"
+
+    def test_add_review_saved_in_memory(self, tmp_path, monkeypatch):
+        """Review should be stored in movie_reviews_memory under lowercase key"""
+
+        from backend.routers import movieRouter
+        movieRouter.movie_reviews_memory.clear()
+
+        movie_dir = tmp_path / "Joker"
+        movie_dir.mkdir()
+        (movie_dir / "metadata.json").write_text(json.dumps(JOKER_METADATA), encoding="utf-8")
+
+        monkeypatch.setattr("backend.routers.movieRouter.DATA_PATH", str(tmp_path))
+
+        review_payload = {
+            "dateOfReview": "2024-01-01",
+            "user": "Khushi",
+            "usefulnessVote": 10,
+            "totalVotes": 12,
+            "userRatingOutOf10": 8,
+            "reviewTitle": "Nice",
+            "review": "Good film"
+        }
+
+        with patch("backend.routers.movieRouter.User.getCurrentUser", return_value={"username": "Khushi"}):
+            response = client.post("/Joker/review?sessionToken=abc", json=review_payload)
+
+        assert response.status_code == 200
+        assert len(movieRouter.movie_reviews_memory["joker"]) == 1
+        assert movieRouter.movie_reviews_memory["joker"][0].review == "Good film"
