@@ -4,7 +4,7 @@ from backend.users.user import User
 class PenaltyPoints:
     #class variables: 
     # points (int), user (user), reason (string), dateIssued (date)    
-    def __init__(self, points: int, user: user, reason: str):
+    def __init__(self, points: int, user: User, reason: str):
         self.points = points
         self.user = user
         self.reason = reason
