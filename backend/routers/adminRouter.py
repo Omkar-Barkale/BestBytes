@@ -3,6 +3,9 @@ import json
 from fastapi import APIRouter, HTTPException
 from schemas.movie import movieCreate
 from users.user import User
+from typing import Optional
+from typing import Query
+
 
 router = APIRouter()
 
@@ -11,7 +14,7 @@ DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data")
 
 # add new movie
 @router.post("/add-movie")
-def addMovie(movieData: movieCreate, sessionToken: str):
+def addMovie(movieData: movieCreate, sessionToken: Optional[str] = Query(None)):
     """Add a new movie folder and metadata file."""
     current_user = User.getCurrentUser(User, sessionToken)
     if not current_user or current_user.role != "admin":
@@ -30,7 +33,7 @@ def addMovie(movieData: movieCreate, sessionToken: str):
 
 # delete movie
 @router.delete("/delete-movie/{title}")
-def deleteMovie(title: str, sessionToken: str):
+def deleteMovie(title: str, sessionToken: Optional[str] = Query(None)):
     """Delete a movie folder and its metadata file."""
     current_user = User.getCurrentUser(User, sessionToken)
     if not current_user or current_user.role != "admin":
@@ -47,7 +50,7 @@ def deleteMovie(title: str, sessionToken: str):
 
 # assign penalty to user
 @router.post("/penalty")
-def assignPenalty(username: str, points: int, reason: str, sessionToken: str):
+def assignPenalty(username: str, points: int, reason: str, sessionToken: Optional[str] = Query(None)):
     current_user = User.getCurrentUser(User, sessionToken)
     if not current_user or current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
