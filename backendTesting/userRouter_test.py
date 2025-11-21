@@ -1,6 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
+from unittest.mock import patch
+
 
 from backend.routers.userRouter import router
 from backend.users.user import User
@@ -141,3 +143,67 @@ class TestVerifyEmail:
 
         assert response.status_code == 400
         assert response.json()["detail"] == "Invalid verification token"
+
+class TestLoginUser:
+    """Tests for POST /login"""
+
+    @pytest.fixture(autouse=True)
+    def setup_users(self):
+        """Reset DB and add one valid user with predictable login behavior."""
+        User.usersDb.clear()
+
+        class DummyUser:
+            def __init__(self):
+                self.username = "khushi"
+                self.email = "k@gmail.com"
+                self.password = "pass123"
+                self.isVerified = True
+
+        dummy = DummyUser()
+        User.usersDb["khushi"] = dummy
+
+        def fake_login(cls, username, password):
+            if username != "khushi" or password != "pass123":
+                raise ValueError("Invalid credentials")
+            return "session-123"
+
+        self.login_patch = patch("backend.users.user.User.login", fake_login)
+        self.login_patch.start()
+
+        yield
+        self.login_patch.stop()
+
+    def test_login_success(self):
+        """Valid username + password -> 200 + return token"""
+
+        response = client.post("/login", params={
+            "username": "khushi",
+            "password": "pass123"
+        })
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["message"] == "Login successful!"
+        assert body["sessionToken"] == "session-123"
+
+    def test_login_invalid_credentials(self):
+        """Wrong password -> 400"""
+
+        response = client.post("/login", params={
+            "username": "khushi",
+            "password": "wrong"
+        })
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Invalid credentials"
+
+    def test_login_unknown_user(self):
+        """Unknown username -> 400 with error from User.login"""
+
+        response = client.post("/login", params={
+            "username": "doesnotexist",
+            "password": "whatever"
+        })
+
+        assert response.status_code == 400
+        assert "Invalid" in response.json()["detail"]
