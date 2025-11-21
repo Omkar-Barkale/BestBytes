@@ -370,7 +370,10 @@ def testCompleteUserWorkflow():
 
 def testThreadSafetyLockExists():
     assert hasattr(User, "_lock")
-    assert isinstance(User._lock, threading.Lock)
+
+    lock_type = type(threading.Lock())
+
+    assert isinstance(User._lock, lock_type)
 
 
 def testUserInitializationAttributes():
