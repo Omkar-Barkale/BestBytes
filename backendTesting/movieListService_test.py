@@ -111,7 +111,7 @@ class TestReadAllMovieLists:
         movieLists = Path(mockBaseDir/"movieLists.json")
         
         data = readAllMovieList(mockBaseDir)
-        assert data is {}
+        assert data == {}
 
 
             
