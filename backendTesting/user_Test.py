@@ -118,5 +118,22 @@ def test_create_account_success():
     assert user.isVerified is False   # default
     assert user.penaltyPoints == []   # starts empty
 
+# test fcn for login failure
+def test_login_fails_not_verified():
+    username = "unverified"
+    email = "unverified@example.com"
+    password = "password123"
+
+    user = User(username, email, password, save=False)
+    user.isVerified = False
+    User.usersDb[user.username] = user
+
+    with pytest.raises(ValueError, match="email not verified"):
+        User.login(username, password)
+
+
+
+
+
 
         
