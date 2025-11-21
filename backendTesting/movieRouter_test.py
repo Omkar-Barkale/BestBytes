@@ -117,3 +117,62 @@ class TestLoadMovies:
         movies = load_all_movies()
         assert len(movies) == 1
         assert movies[0].title == "Joker"
+
+class TestGetMovieByTitle:
+    """Tests for GET /{title} endpoint"""
+
+    def test_get_movie_success(self, tmp_path, monkeypatch):
+        """Retrieve a single movie by title"""
+
+        movie_dir = tmp_path / "Joker"
+        movie_dir.mkdir()
+        (movie_dir / "metadata.json").write_text(
+            json.dumps(JOKER_METADATA), encoding="utf-8"
+        )
+
+        monkeypatch.setattr("backend.routers.movieRouter.DATA_PATH", str(tmp_path))
+
+        response = client.get("/Joker")
+        assert response.status_code == 200
+        assert response.json()["title"] == "Joker"
+
+    def test_get_movie_not_found(self, tmp_path, monkeypatch):
+        """If movie folder doesn't exist -> 404"""
+
+        monkeypatch.setattr("backend.routers.movieRouter.DATA_PATH", str(tmp_path))
+
+        response = client.get("/UnknownMovie")
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Movie 'UnknownMovie' not found"
+
+    def test_get_movie_includes_reviews_from_memory(self, tmp_path, monkeypatch):
+        """If movie_reviews_memory has reviews, they should appear in the response."""
+
+        from backend.routers import movieRouter
+
+        movieRouter.movie_reviews_memory.clear()
+        movieRouter.movie_reviews_memory["joker"] = [
+            {
+                "dateOfReview": "2024-01-01",
+                "user": "TestUser",
+                "usefulnessVote": 10,
+                "totalVotes": 12,
+                "userRatingOutOf10": 9,
+                "reviewTitle": "Amazing!",
+                "review": "Amazing movie!"
+            }
+        ]
+
+
+        movie_dir = tmp_path / "Joker"
+        movie_dir.mkdir()
+        (movie_dir / "metadata.json").write_text(
+            json.dumps(JOKER_METADATA), encoding="utf-8"
+        )
+
+        monkeypatch.setattr("backend.routers.movieRouter.DATA_PATH", str(tmp_path))
+
+        response = client.get("/Joker")
+        assert response.status_code == 200
+        assert response.json()["reviews"][0]["review"] == "Amazing movie!"
+
