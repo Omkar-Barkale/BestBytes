@@ -203,7 +203,9 @@ class User:
             return None
     
     def totalPenaltyPoints(self) -> int:
-        # Return the total number of penalty points
-        return sum(pp.points for pp in self.penaltyPointsList)
+    # Filter out expired penalties
+        active = [pp for pp in self.penaltyPointsList if not pp.isExpired()]
+        return sum(pp.points for pp in active)
+
     
                
