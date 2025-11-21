@@ -347,6 +347,28 @@ class TestDeleteMovie:
         assert response.status_code == 403
         assert response.json()["detail"] == "Only admins can delete movies"
 
+    # CHECK: deleting movie removes the associated reviews
+    def testDeleteMovieRemovesAssociatedReviews(self, tempDataPath, monkeypatch):
+        """Ensures movieReviews_memory entry is removed"""
+        from backend.routers import adminRouter
+        monkeypatch.setattr(adminRouter, "DATA_PATH", tempDataPath)
+
+        # Make movie folder
+        movieFolder = os.path.join(tempDataPath, "SampleMovie")
+        os.makedirs(movieFolder)
+
+        # fake review memory
+        adminRouter.movieReviews_memory["samplemovie"] = ["review1", "review2"]
+
+        mockAdmin = MagicMock(role="admin")
+        monkeypatch.setattr(adminRouter.User, "getCurrentUser", lambda _, __: mockAdmin)
+
+        response = client.delete("/delete-movie/SampleMovie?sessionToken=adminToken")
+        assert response.status_code == 200
+
+        # After deletion review must be removed
+        assert "samplemovie" not in adminRouter.movieReviews_memory
+
     
 
 
