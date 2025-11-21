@@ -1,6 +1,8 @@
 import pytest
 from pathlib import Path
 from fastapi import HTTPException
+from unittest.mock import Mock, patch, MagicMock, mock_open
+import sys
 import json
 from backend.services.movieListServices import saveMovieList
 
