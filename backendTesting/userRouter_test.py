@@ -249,3 +249,53 @@ class TestLogoutUser:
         """Missing sessionToken entirely -> 422"""
         response = client.post("/logout")
         assert response.status_code == 422
+
+class TestGetCurrentUser:
+    """Tests for GET /me"""
+
+    @pytest.fixture(autouse=True)
+    def setup_user(self):
+        """Prepare a mock user and mock getCurrentUser method."""
+        User.usersDb.clear()
+
+        class DummyUser:
+            def __init__(self):
+                self.username = "khushi"
+                self.email = "k@gmail.com"
+                self.isVerified = True
+                self.createdAt = "2024-01-01"
+                self.lastLogin = "2024-01-02"
+
+        self.dummy = DummyUser()
+
+        def fake_get_current_user(cls, token):
+            return self.dummy if token == "valid-token" else None
+
+        self.patch = patch("backend.users.user.User.getCurrentUser", fake_get_current_user)
+        self.patch.start()
+
+        yield
+        self.patch.stop()
+
+    def test_get_current_user_success(self):
+        """Valid token -> returns user details"""
+        response = client.get("/me?sessionToken=valid-token")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert data["username"] == "khushi"
+        assert data["email"] == "k@gmail.com"
+        assert data["verified"] is True
+        assert data["createdAt"] == "2024-01-01"
+        assert data["lastLogin"] == "2024-01-02"
+
+    def test_get_current_user_invalid_token(self):
+        """Invalid token -> 401"""
+        response = client.get("/me?sessionToken=bad-token")
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Invalid or expired session token"
+
+    def test_get_current_user_missing_token(self):
+        """Missing query parameter -> FastAPI returns 422"""
+        response = client.get("/me")
+        assert response.status_code == 422
