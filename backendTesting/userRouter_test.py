@@ -207,3 +207,45 @@ class TestLoginUser:
 
         assert response.status_code == 400
         assert "Invalid" in response.json()["detail"]
+
+class TestLogoutUser:
+    """Tests for POST /logout"""
+
+    @pytest.fixture(autouse=True)
+    def setup_user(self):
+        """Reset DB and mock logout behavior for predictable results."""
+        User.usersDb.clear()
+
+        class DummyUser:
+            def __init__(self):
+                self.username = "khushi"
+                self.email = "k@gmail.com"
+                self.sessionToken = "valid-token"
+
+        self.dummy = DummyUser()
+
+        def fake_logout(cls, token):
+            return token == "valid-token"
+
+        self.logout_patch = patch("backend.users.user.User.logout", fake_logout)
+        self.logout_patch.start()
+
+        yield
+        self.logout_patch.stop()
+
+    def test_logout_success(self):
+        """Valid session token -> success"""
+        response = client.post("/logout?sessionToken=valid-token")
+        assert response.status_code == 200
+        assert response.json()["message"] == "Logout successful!"
+
+    def test_logout_invalid_token(self):
+        """Invalid token -> 400"""
+        response = client.post("/logout?sessionToken=wrong")
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Invalid or expired session token"
+
+    def test_logout_missing_token(self):
+        """Missing sessionToken entirely -> 422"""
+        response = client.post("/logout")
+        assert response.status_code == 422
