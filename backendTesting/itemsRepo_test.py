@@ -6,7 +6,7 @@ from backend.repositories import itemsRepo
 
 #pylint: disable = function-naming-style, method-naming-style
 def testGetMovie():
-    assert(str(itemsRepo.getMovieDir("test"))) == str(Path.cwd()) + "\\backend\data\\test"
+    assert itemsRepo.getMovieDir("test") == Path.cwd() / "backend" / "data" / "test"
 
 
 def testGetMovieDirPath():

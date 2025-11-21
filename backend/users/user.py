@@ -52,10 +52,7 @@ class User:
         """Validate email format and check if domain has MX records"""
         # Basic email format validation
         emailPattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-        if not re.match(emailPattern, email):
-            return True
-        else:
-            return False
+        return bool(re.match(emailPattern, email))
     
 
     
