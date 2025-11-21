@@ -106,7 +106,6 @@ class User:
             return True
         return False
     
-    @classmethod
     def _cleanExpiredSessions(cls):
         """Remove expired sessions"""
         currentTime = datetime.now()
