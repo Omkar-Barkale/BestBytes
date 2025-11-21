@@ -12,7 +12,7 @@ from unittest import TestCase
 name = "test"
 email = "email@email.com"
 pswd = "password"
-testUser = User.User(name, email, pswd, save = False)
+testUser = User(name, email, pswd, save = False)
 
 
 #Test checkUsername
@@ -48,7 +48,7 @@ class encryptPassword(TestCase):
 
 # logging in with less than 3 penalty points check
 def test_login_allowed_with_fewer_than_3_penalties():
-    user = User.User(name, email, pswd, save=False)
+    user = User(name, email, pswd, save=False)
     
     # Add 2 penalty points
     PenaltyPoints(1, user, "Reason 1")
@@ -61,7 +61,7 @@ def test_login_allowed_with_fewer_than_3_penalties():
 
 # logging in with greater than or equal to 3 penalty points check
 def test_login_blocked_with_more_than_3_penalties():
-    user = User.User(name + "_blocked", "blocked_" + email, pswd, save=False)
+    user = User(name + "_blocked", "blocked_" + email, pswd, save=False)
     
     # Add more than 3 penalty points
     PenaltyPoints(1, user, "Reason 1")
