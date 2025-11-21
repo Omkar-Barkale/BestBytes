@@ -11,4 +11,6 @@ Prashaant's edit
 
 
 docker build -t backend
+
+
 uvicorn backend.app:app --reload
