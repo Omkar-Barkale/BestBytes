@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from users.user import User
+
 
 
 def saveUserToDB(username, email, passwordHash,path: Path):
@@ -11,7 +11,7 @@ def saveUserToDB(username, email, passwordHash,path: Path):
         }
 
         path.mkdir(parents= True, exist_ok= True)
-        path = path/"users.json"
+        path = path/r"users.json"
 
         data = {}
         if path.exists():
@@ -29,7 +29,7 @@ def saveUserToDB(username, email, passwordHash,path: Path):
 
 def findUserInDB(username, path:Path = r"backend\data\Users"):
     path.mkdir(parents= True, exist_ok= True)
-    path = path/r"users.json"
+    path = path/"users.json"
 
     data = {}
     if path.exists():
@@ -38,8 +38,7 @@ def findUserInDB(username, path:Path = r"backend\data\Users"):
                 data = json.load(jsonFile)
             except json.JSONDecodeError:
                 data = {}
-        jsonFile.close()
     if username in data:
         return data[username]
-    raise ValueError("User does not exist in DB")
+    raise ValueError(f"User '{username}' does not exist in DB")
      
