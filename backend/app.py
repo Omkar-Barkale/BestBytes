@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import (
+from backend.routers import (
     movieRouter,
     reviewRouter,
     userRouter,

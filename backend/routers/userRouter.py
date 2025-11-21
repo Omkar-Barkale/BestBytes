@@ -4,6 +4,7 @@ from backend.users.user import User
 
 router = APIRouter()
 
+
 # register user
 @router.post("/register")
 def registerUser(username: str, email: str, password: str):
