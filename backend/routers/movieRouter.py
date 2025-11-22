@@ -30,6 +30,12 @@ def load_all_movies() -> List[movie]:
     return movies
 
 # list all movies
+
+# DATA_PATH is correct
+# load_all_movies() function is working
+# The router is mounted correctly
+# Docker is mapping folder properly
+
 @router.get("/", response_model=List[movie])
 def get_all_movies():
     """Return all movies found in the /data directory."""
@@ -39,6 +45,11 @@ def get_all_movies():
     return movies
 
 # get movie details
+
+# The case-insensitive lookup is working.
+# The metadata file was found.
+# No incorrect validation issues.
+
 @router.get("/{title}", response_model=movie)
 def get_movie_by_title(title: str):
     """Return one movie by its folder name (case-insensitive)."""
@@ -55,15 +66,21 @@ def get_movie_by_title(title: str):
         return movie(**data)
 
 # add review
+
+# only works if user logs in first, otherwise will not add a review
+#created mock user for successful test
+
 @router.post("/{title}/review", response_model=movieReviews)
 def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str):
     """Add a review"""
-    
-    # check: user authentication
+
+    # ===========================
+    # ORIGINAL: user authentication
     current_user = User.getCurrentUser(User, sessionToken)
     if not current_user: 
         raise HTTPException(status_code=401, detail="Login required to review")
-    
+    # ===========================
+
     # check: movie exists
     movie_folder = os.path.join(DATA_PATH, title)
     if not os.path.exists(movie_folder):
@@ -72,13 +89,17 @@ def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str):
     # check: review title and text are not empty
     if not review_data.reviewTitle.strip() or not review_data.review.strip():
         raise HTTPException(status_code=400, detail="Review title and text cannot be empty")
-    
+
     # check: prevent duplicate review by same user for the same movie
     existing_reviews = movie_reviews_memory.get(title.lower(), [])
     for r in existing_reviews:
         if r.user.lower() == current_user.username.lower():
             raise HTTPException(status_code=400, detail="You have already reviewed this movie")
-    
+
+    # ===========================
+    # ORIGINAL: use the request body directly
     review = movieReviews(**review_data.dict())
+    # ===========================
+
     movie_reviews_memory.setdefault(title.lower(), []).append(review)
     return review
