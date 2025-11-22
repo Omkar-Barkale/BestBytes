@@ -70,29 +70,33 @@ def get_movie_by_title(title: str):
 # only works if user logs in first, otherwise will not add a review
 
 @router.post("/{title}/review", response_model=movieReviews)
-def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str = None):
+def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str):
     """Add a review"""
 
     # --- AUTHENTICATION ---
     if not sessionToken or sessionToken.strip() == "":
         raise HTTPException(status_code=401, detail="Login required to review")
 
-    # Swagger test token
-    if sessionToken == "swagger-mock":
-        mock_username = "admin"
-        # create a real User object if not exists
-        if mock_username not in User.usersDb:
-            User.usersDb[mock_username] = User(
-                username=mock_username,
+    # For tests and Swagger: map certain tokens to mock users
+    MOCK_USERS = {
+        "swagger-mock": {"username": "admin", "email": "admin@example.com"},
+        "test-token": {"username": "tester", "email": "tester@example.com"}
+    }
+
+    if sessionToken in MOCK_USERS:
+        # convert dict to User object if needed
+        u = MOCK_USERS[sessionToken]
+        if u["username"] not in User.usersDb:
+            User.usersDb[u["username"]] = User(
+                username=u["username"],
                 password="mockpass",
-                email="admin@example.com"
+                email=u["email"]
             )
-        current_user = User.usersDb[mock_username]
+        current_user = User.usersDb[u["username"]]
     else:
         current_user = User.getCurrentUser(User, sessionToken)
 
     if not isinstance(current_user, User):
-        # any other invalid token
         raise HTTPException(status_code=401, detail="Login required to review")
 
     # --- VALIDATION ---
@@ -111,7 +115,7 @@ def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str = 
 
     # --- CREATE REVIEW ---
     review_dict = review_data.model_dump() if hasattr(review_data, "model_dump") else review_data.dict()
-    review_dict["user"] = current_user.username  # force the username
+    review_dict["user"] = current_user.username  # enforce correct username
     review = movieReviews(**review_dict)
 
     # Save in memory
