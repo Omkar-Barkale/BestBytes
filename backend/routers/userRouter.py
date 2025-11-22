@@ -10,7 +10,7 @@ router = APIRouter()
 def registerUser(username: str, email: str, password: str):
     """Create a new user account."""
     try:
-        newUser = User.createAccount(User, username=username, email=email, password=password)
+        newUser = User.createAccount(username=username, email=email, password=password)
         return {
             "message": "Account created successfully!",
             "username": newUser.username,
@@ -38,7 +38,7 @@ def verifyEmail(username: str, token: str):
 def loginUser(username: str, password: str):
     """Login a user and return a session token."""
     try:
-        sessionToken = User.login(User, username=username, password=password)
+        sessionToken = User.login(username=username, password=password)
         return {"message": "Login successful!", "sessionToken": sessionToken}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -56,7 +56,7 @@ def logoutUser(sessionToken: str):
 @router.get("/me")
 def getCurrentUser(sessionToken: str):
     """Return the current logged-in user's details if session is valid."""
-    currentUser = User.getCurrentUser(User, sessionToken)
+    currentUser = User.getCurrentUser(sessionToken)
     if currentUser:
         return {
             "username": currentUser.username,

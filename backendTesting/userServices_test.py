@@ -2,7 +2,7 @@ import pytest
 import sys
 from pathlib import Path
 import json
-from backend.services.userServices import saveUserToDB,findUserInDB
+from backend.services.userServices import saveUserToDB,findUserInDB,changeUserStatus
 from backend.users import user
 from unittest import TestCase
 from unittest.mock import Mock, patch, MagicMock, mock_open
@@ -39,6 +39,26 @@ def test_saveUserToDB(mockBaseDir):
     #clean up
     with open(path,'w') as jsonFile:
         jsonFile.truncate(0)
+
+def test_ChangeUser(mockBaseDir):
+    #If we call this function, we should be able to find the specific user created
+    mockBaseDir.mkdir(parents=True, exist_ok=True)
+    path = mockBaseDir/"userList.json"
+    saveUserToDB(testUser.username,testUser.email,testUser.passwordHash,path)
+    changeUserStatus(testUser.username,True, path)
+    with open(path,'r') as jsonFile:
+        try:
+            data = json.load(jsonFile) 
+        except json.JSONDecodeError:
+            data = {}
+        
+    assert data[testUser.username]["isVerified"] 
+
+    #clean up
+    with open(path,'w') as jsonFile:
+        jsonFile.truncate(0)
+
+        
 
 
 def testFindUserInDB(mockBaseDir):
