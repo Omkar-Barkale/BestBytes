@@ -326,7 +326,28 @@ class TestDeleteMovie:
         
         assert response.status_code == 200
         assert not os.path.exists(movieFolder)
+    
+    def testDeleteMovieUnauthorizedInvalidToken(self, monkeypatch):
+        """Returns 401 when sessionToken is invalid"""
+        with patch("backend.routers.adminRouter.User.getCurrentUser", return_value=None):
+            response = client.delete("/delete-movie/TestMovie?sessionToken=invalid")
+        
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Login required to delete movies"
 
+    # Test - CHECK: only admins can delete movies
+    def testDeleteMovieForbiddenNonAdmin(self, monkeypatch):
+        """Returns 403 when user is authenticated but not admin"""
+        mockUser = MagicMock()
+        mockUser.role = "user"
+
+        with patch("backend.routers.adminRouter.User.getCurrentUser", return_value=mockUser):
+            response = client.delete("/delete-movie/TestMovie?sessionToken=token123")
+
+        assert response.status_code == 403
+        assert response.json()["detail"] == "Only admins can delete movies"
+
+    
 
 class TestAssignPenalty:
     """Tests for POST /penalty endpoint"""

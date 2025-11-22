@@ -4,10 +4,16 @@ from fastapi import APIRouter, HTTPException
 from backend.schemas.movie import movieCreate
 from backend.users.user import User
 
+from backend.routers.reviewRouter import router, movieReviews_memory
+from backend.schemas.movieReviews import movieReviews
+
 router = APIRouter()
 
 # load data
 DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data")
+
+# stores user movie lists (for check in deleteMovie)
+userMovieLists = {}
 
 # add new movie
 @router.post("/add-movie")
@@ -34,16 +40,28 @@ def addMovie(movieData: movieCreate):
     
 # delete movie
 @router.delete("/delete-movie/{title}")
-def deleteMovie(title: str):
+def deleteMovie(title: str, sessionToken: str):
     """Delete a movie folder and its metadata file."""
+    
+    # CHECK: User authentication and admin authorization
+    current_user = User.getCurrentUser(User, sessionToken)
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Login required to delete movies")
+    if getattr(current_user, "role", None) != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can delete movies")
+    
     folderPath = os.path.join(DATA_PATH, title)
+    # CHECK: Movie exists
     if not os.path.exists(folderPath):
         raise HTTPException(status_code=404, detail="Movie not found")
 
     try:
+        # CHECK: Delete all files inside movie folder
         for fileName in os.listdir(folderPath):
             os.remove(os.path.join(folderPath, fileName))
         os.rmdir(folderPath)
+        
+        
 
         return {"message": f"Movie '{title}' deleted successfully."}
     except PermissionError:
