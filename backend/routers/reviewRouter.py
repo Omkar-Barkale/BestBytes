@@ -21,6 +21,14 @@ def getReviewsForMovie(title: str) -> List[movieReviews]:
 
 
 # list all reviews for a movie
+
+# - Returns 404 if:
+#     1. No review exists in movieReviews_memory for that movie.
+#     2. Movie folder does not exist (checked via DATA_PATH).
+# - To test successfully in Swagger:
+#     - Add a review first using POST.
+#     - Then GET will return the review(s).
+
 @router.get("/{title}/reviews", response_model=List[movieReviews])
 def getAllReviewsForMovie(title: str):
     """Return all reviews for a specific movie."""
@@ -35,6 +43,12 @@ def getAllReviewsForMovie(title: str):
 
 
 # list all reviews by a user
+
+# - Returns 404 if the user has no reviews.
+# - Works case-insensitively.
+# - Returns reviews across multiple movies.
+# - Unit tests cover all cases: success, case-insensitive, multiple movies, not found.
+
 @router.get("/user/{username}", response_model=List[movieReviews])
 def getReviewsByUser(username: str):
     """Return all reviews written by a specific user across all movies."""
@@ -50,6 +64,18 @@ def getReviewsByUser(username: str):
 
 
 # update review
+
+# - Requires:
+#     1. Movie folder exists.
+#     2. Index is valid (within list bounds).
+#     3. Logged-in user matches the review owner, or user is an admin.
+# - Unit tests cover:
+#     - Success
+#     - Unauthenticated (401)
+#     - Index not found (404)
+#     - Wrong user (403)
+#     - Movie missing (404)
+
 @router.put("/{title}/review/{index}", response_model=movieReviews)
 def updateReview(title: str, index: int, updated_data: movieReviewsUpdate, sessionToken: str):
     """Update an existing review by index for a specific movie."""
@@ -79,6 +105,19 @@ def updateReview(title: str, index: int, updated_data: movieReviewsUpdate, sessi
 
 
 # delete review
+
+# - Same rules as Update:
+#     - Movie must exist
+#     - Index valid
+#     - User must be review owner or admin
+# - Unit tests cover:
+#     - Success
+#     - Unauthenticated (401)
+#     - Movie missing (404)
+#     - Index out of range (404)
+#     - Wrong user (403)
+#     - Admin override
+
 @router.delete("/{title}/review/{index}")
 def deleteReview(title: str, index: int, sessionToken: str):
     """Delete a review by index for a specific movie."""
