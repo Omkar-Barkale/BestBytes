@@ -162,7 +162,7 @@ class TestLoginUser:
         dummy = DummyUser()
         User.usersDb["khushi"] = dummy
 
-        def fake_login(cls, username, password):
+        def fake_login(username, password):
             if username != "khushi" or password != "pass123":
                 raise ValueError("Invalid credentials")
             return "session-123"
@@ -268,7 +268,7 @@ class TestGetCurrentUser:
 
         self.dummy = DummyUser()
 
-        def fake_get_current_user(cls, token):
+        def fake_get_current_user( token):
             return self.dummy if token == "valid-token" else None
 
         self.patch = patch("backend.users.user.User.getCurrentUser", fake_get_current_user)

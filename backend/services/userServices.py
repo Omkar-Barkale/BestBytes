@@ -28,6 +28,27 @@ def saveUserToDB(username, email, passwordHash, path: Path):
     with open(path, 'w') as jsonFile:
         json.dump(data, jsonFile, indent=2)
 
+def changeUserStatus(username:str, status:bool, path):
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    data = {}
+    if path.exists():
+        try:
+            with open(path, 'r') as jsonFile:
+                data = json.load(jsonFile)
+                
+        except json.JSONDecodeError:
+            data = {}
+
+    if username in data:
+        data[username]["isVerified"] = status
+        with open(path, 'w') as jsonFile:
+            json.dump(data, jsonFile, indent=2)
+
+
+    
+
+
 
 def findUserInDB(username, path: Path = Path("backend/data/Users/userList.json")):
 
