@@ -75,19 +75,18 @@ def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str = 
 
     # --- AUTHENTICATION ---
 
-    # Missing token (None, empty, or whitespace) = unauthenticated
+    # No token provided -> unauthenticated
     if not sessionToken or sessionToken.strip() == "":
         raise HTTPException(status_code=401, detail="Login required to review")
 
-    # Try real authentication first
+    # Try to get the current user
     current_user = User.getCurrentUser(User, sessionToken)
 
-    # Invalid token (but provided) → test expects 401 "Invalid session token"
+    # Invalid token -> only allow mock for Swagger / manual testing
     if not current_user:
-        # Allow Swagger mock ONLY for testing manually
         if sessionToken == "swagger-mock":
+            # Make sure the mock user exists in usersDb
             mock_username = "admin"
-
             if mock_username not in User.usersDb:
                 User.usersDb[mock_username] = User(
                     username=mock_username,
@@ -96,7 +95,8 @@ def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str = 
                 )
             current_user = User.usersDb[mock_username]
         else:
-            raise HTTPException(status_code=401, detail="Invalid session token")
+            # Real tests expect "Login required to review" for unauthenticated
+            raise HTTPException(status_code=401, detail="Login required to review")
 
     # --- VALIDATION ---
 
@@ -112,8 +112,11 @@ def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str = 
         if r.user.lower() == current_user.username.lower():
             raise HTTPException(status_code=400, detail="You have already reviewed this movie")
 
-    review = movieReviews(**review_data.dict(), user=current_user.username)
+    # Create review with correct username
+    review_dict = review_data.model_dump() if hasattr(review_data, "model_dump") else review_data.dict()
+    review = movieReviews(**review_dict, user=current_user.username)
 
+    # Save in memory
     movie_reviews_memory.setdefault(title.lower(), []).append(review)
 
     return review
