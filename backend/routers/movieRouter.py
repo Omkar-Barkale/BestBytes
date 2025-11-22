@@ -74,11 +74,12 @@ def get_movie_by_title(title: str):
 def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str):
     """Add a review"""
 
-    # mock logged-in user for testing
-    class MockUser:
-        username = "TestUser"
-
-    current_user = MockUser()  # This is the dummy logged-in user
+    # ===========================
+    # ORIGINAL: user authentication
+    current_user = User.getCurrentUser(User, sessionToken)
+    if not current_user: 
+        raise HTTPException(status_code=401, detail="Login required to review")
+    # ===========================
 
     # check: movie exists
     movie_folder = os.path.join(DATA_PATH, title)
@@ -95,16 +96,10 @@ def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str):
         if r.user.lower() == current_user.username.lower():
             raise HTTPException(status_code=400, detail="You have already reviewed this movie")
 
-    # create review with dummy values if review_data is empty
-    review = movieReviews(
-        dateOfReview="2025-11-21",
-        user=current_user.username,
-        usefulnessVote=0,
-        totalVotes=0,
-        userRatingOutOf10=10,
-        reviewTitle="Dummy Review Title",
-        review="This is a dummy review for testing purposes."
-    )
+    # ===========================
+    # ORIGINAL: use the request body directly
+    review = movieReviews(**review_data.dict())
+    # ===========================
 
     movie_reviews_memory.setdefault(title.lower(), []).append(review)
     return review
