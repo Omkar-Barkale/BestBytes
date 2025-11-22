@@ -1,0 +1,22 @@
+{
+    "title": "string",
+    "movieIMDbRating": 0.0,
+    "totalRatingCount": 0,
+    "totalUserReviews": "string",
+    "totalCriticReviews": "string",
+    "metaScore": "string",
+    "movieGenres": [
+        "string"
+    ],
+    "directors": [
+        "string"
+    ],
+    "datePublished": "string",
+    "creators": [
+        "string"
+    ],
+    "mainStars": [
+        "string"
+    ],
+    "description": "string"
+}
