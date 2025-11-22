@@ -74,32 +74,28 @@ def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str = 
     """Add a review"""
 
     # --- AUTHENTICATION ---
-
-    # No token provided -> unauthenticated
     if not sessionToken or sessionToken.strip() == "":
         raise HTTPException(status_code=401, detail="Login required to review")
 
-    # Try to get the current user
-    current_user = User.getCurrentUser(User, sessionToken)
+    # Swagger test token
+    if sessionToken == "swagger-mock":
+        mock_username = "admin"
+        # create a real User object if not exists
+        if mock_username not in User.usersDb:
+            User.usersDb[mock_username] = User(
+                username=mock_username,
+                password="mockpass",
+                email="admin@example.com"
+            )
+        current_user = User.usersDb[mock_username]
+    else:
+        current_user = User.getCurrentUser(User, sessionToken)
 
-    # Invalid token -> only allow mock for Swagger / manual testing
-    if not current_user:
-        if sessionToken == "swagger-mock":
-            # Make sure the mock user exists in usersDb
-            mock_username = "admin"
-            if mock_username not in User.usersDb:
-                User.usersDb[mock_username] = User(
-                    username=mock_username,
-                    password="mockpass",
-                    email="admin@example.com"
-                )
-            current_user = User.usersDb[mock_username]
-        else:
-            # Real tests expect "Login required to review" for unauthenticated
-            raise HTTPException(status_code=401, detail="Login required to review")
+    if not isinstance(current_user, User):
+        # any other invalid token
+        raise HTTPException(status_code=401, detail="Login required to review")
 
     # --- VALIDATION ---
-
     movie_folder = os.path.join(DATA_PATH, title)
     if not os.path.exists(movie_folder):
         raise HTTPException(status_code=404, detail=f"Movie '{title}' not found")
@@ -107,14 +103,16 @@ def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str = 
     if not review_data.reviewTitle.strip() or not review_data.review.strip():
         raise HTTPException(status_code=400, detail="Review title and text cannot be empty")
 
+    # Prevent duplicate review by same user
     existing_reviews = movie_reviews_memory.get(title.lower(), [])
     for r in existing_reviews:
         if r.user.lower() == current_user.username.lower():
             raise HTTPException(status_code=400, detail="You have already reviewed this movie")
 
-    # Create review with correct username
+    # --- CREATE REVIEW ---
     review_dict = review_data.model_dump() if hasattr(review_data, "model_dump") else review_data.dict()
-    review = movieReviews(**review_dict, user=current_user.username)
+    review_dict["user"] = current_user.username  # force the username
+    review = movieReviews(**review_dict)
 
     # Save in memory
     movie_reviews_memory.setdefault(title.lower(), []).append(review)
