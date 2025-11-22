@@ -70,14 +70,20 @@ def get_movie_by_title(title: str):
 # only works if user logs in first, otherwise will not add a review
 
 @router.post("/{title}/review", response_model=movieReviews)
-def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str):
+def add_review(title: str, review_data: movieReviewsCreate):
     """Add a review"""
+
+    # ---- MOCK USER INSERTED HERE ----
+    mock_username = "admin"
     
-    # check: user authentication
-    current_user = User.getCurrentUser(User, sessionToken)
-    if not current_user: 
-        raise HTTPException(status_code=401, detail="Login required to review")
-    
+    if mock_username not in User.usersDb:
+        User.usersDb[mock_username] = User(
+            username=mock_username,
+            password="mockpassword123"
+        )
+    current_user = User.usersDb[mock_username]
+    # ---------------------------------
+
     # check: movie exists
     movie_folder = os.path.join(DATA_PATH, title)
     if not os.path.exists(movie_folder):
