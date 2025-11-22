@@ -73,48 +73,47 @@ def get_movie_by_title(title: str):
 def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str = None):
     """Add a review"""
 
-    # --- AUTHENTICATION HANDLING ---
+    # --- AUTHENTICATION ---
 
-    # Test suite expects: no sessionToken -> 401
-    if not sessionToken:
+    # Missing token (None, empty, or whitespace) = unauthenticated
+    if not sessionToken or sessionToken.strip() == "":
         raise HTTPException(status_code=401, detail="Login required to review")
 
-    # Try real authentication
+    # Try real authentication first
     current_user = User.getCurrentUser(User, sessionToken)
 
-    # If real token is invalid → allow mock only for Swagger
+    # Invalid token (but provided) → test expects 401 "Invalid session token"
     if not current_user:
+        # Allow Swagger mock ONLY for testing manually
         if sessionToken == "swagger-mock":
             mock_username = "admin"
 
-            # Create mock user if not exists
             if mock_username not in User.usersDb:
                 User.usersDb[mock_username] = User(
                     username=mock_username,
                     password="mockpass",
                     email="admin@example.com"
                 )
-
             current_user = User.usersDb[mock_username]
         else:
             raise HTTPException(status_code=401, detail="Invalid session token")
 
+    # --- VALIDATION ---
 
-    # check: movie exists
     movie_folder = os.path.join(DATA_PATH, title)
     if not os.path.exists(movie_folder):
         raise HTTPException(status_code=404, detail=f"Movie '{title}' not found")
 
-    # check: review title and text are not empty
     if not review_data.reviewTitle.strip() or not review_data.review.strip():
         raise HTTPException(status_code=400, detail="Review title and text cannot be empty")
-    
-    # check: prevent duplicate review by same user for the same movie
+
     existing_reviews = movie_reviews_memory.get(title.lower(), [])
     for r in existing_reviews:
         if r.user.lower() == current_user.username.lower():
             raise HTTPException(status_code=400, detail="You have already reviewed this movie")
-    
-    review = movieReviews(**review_data.dict())
+
+    review = movieReviews(**review_data.dict(), user=current_user.username)
+
     movie_reviews_memory.setdefault(title.lower(), []).append(review)
+
     return review
