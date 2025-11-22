@@ -22,7 +22,7 @@ def addMovie(movieData: movieCreate):
         metadataPath = os.path.join(folderPath, "metadata.json")
 
         with open(metadataPath, "w", encoding="utf-8") as f:
-            json.dump(movieData.model_dump(), f, indent=4)  # Use model_dump() instead of dict() more robust in this case
+            json.dump(movieData.model_dump(), f, indent=4)
 
         return {"message": f"Movie '{movieData.title}' added successfully."}
     except PermissionError:
@@ -31,6 +31,7 @@ def addMovie(movieData: movieCreate):
         raise HTTPException(status_code=500, detail=f"IO error: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+    
 # delete movie
 @router.delete("/delete-movie/{title}")
 def deleteMovie(title: str):

@@ -23,8 +23,9 @@ testUser = user.User(name, email, pswd, save = False)
 
 def test_saveUserToDB(mockBaseDir):
     #If we call this function, we should be able to find the specific user created
-    path = mockBaseDir/"users.json"
-    saveUserToDB(testUser.username,testUser.email,testUser.passwordHash.decode('utf-8'),mockBaseDir)
+    mockBaseDir.mkdir(parents=True, exist_ok=True)
+    path = mockBaseDir/"userList.json"
+    saveUserToDB(testUser.username,testUser.email,testUser.passwordHash,path)
     with open(path,'r') as jsonFile:
         try:
             data = json.load(jsonFile) 
@@ -32,8 +33,8 @@ def test_saveUserToDB(mockBaseDir):
             data = {}
         
     assert name in data
-    assert email in data[name]["email"]
-    assert testUser.passwordHash.decode('utf-8') in data[name]["password"]
+    assert email == data[name]["email"]
+    assert testUser.passwordHash.decode('utf-8') == data[name]["password"]
 
     #clean up
     with open(path,'w') as jsonFile:
@@ -41,11 +42,12 @@ def test_saveUserToDB(mockBaseDir):
 
 
 def testFindUserInDB(mockBaseDir):
-    saveUserToDB(testUser.username,testUser.email,testUser.passwordHash.decode('utf-8'),mockBaseDir)
-    saveUserToDB("testUser.username",testUser.email,testUser.passwordHash.decode('utf-8'),mockBaseDir)
-    saveUserToDB("tester",testUser.email,testUser.passwordHash.decode('utf-8'),mockBaseDir)
+    mockBaseDir.mkdir(parents=True, exist_ok=True)
+    path = mockBaseDir/"userList.json"
+    saveUserToDB(testUser.username,testUser.email,testUser.passwordHash,path)
+    saveUserToDB("testUser.username",testUser.email,testUser.passwordHash,path)
+    saveUserToDB("tester",testUser.email,testUser.passwordHash,path)
 
-    assert findUserInDB(testUser.username,mockBaseDir) == {"email":testUser.email,"password":testUser.passwordHash.decode('utf-8')}
+    assert findUserInDB(testUser.username,path) == {"email":testUser.email,"password":testUser.passwordHash.decode('utf-8'),"isVerified": False}
     with pytest.raises(ValueError):
-        findUserInDB("notTester",mockBaseDir)
-        
+        findUserInDB("notTester",path)
