@@ -73,16 +73,16 @@ def get_movie_by_title(title: str):
 def add_review(title: str, review_data: movieReviewsCreate):
     """Add a review"""
 
-    # ---- MOCK USER INSERTED HERE ----
+    # MOCK USER INSERTED HERE
     mock_username = "admin"
     
     if mock_username not in User.usersDb:
         User.usersDb[mock_username] = User(
             username=mock_username,
             password="mockpassword123"
+            email="admin@example.com"
         )
     current_user = User.usersDb[mock_username]
-    # ---------------------------------
 
     # check: movie exists
     movie_folder = os.path.join(DATA_PATH, title)
