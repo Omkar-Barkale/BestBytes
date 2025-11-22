@@ -70,20 +70,34 @@ def get_movie_by_title(title: str):
 # only works if user logs in first, otherwise will not add a review
 
 @router.post("/{title}/review", response_model=movieReviews)
-def add_review(title: str, review_data: movieReviewsCreate):
+def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str = None):
     """Add a review"""
 
-    # MOCK USER INSERTED HERE
-    mock_username = "admin"
-    
-    if mock_username not in User.usersDb:
-        User.usersDb[mock_username] = User(
-            username=mock_username,
-            password="mockpassword123",
-            email="admin@example.com"
-        )
+    # --- AUTHENTICATION HANDLING ---
 
-    current_user = User.usersDb[mock_username]
+    # Test suite expects: no sessionToken -> 401
+    if not sessionToken:
+        raise HTTPException(status_code=401, detail="Login required to review")
+
+    # Try real authentication
+    current_user = User.getCurrentUser(User, sessionToken)
+
+    # If real token is invalid → allow mock only for Swagger
+    if not current_user:
+        if sessionToken == "swagger-mock":
+            mock_username = "admin"
+
+            # Create mock user if not exists
+            if mock_username not in User.usersDb:
+                User.usersDb[mock_username] = User(
+                    username=mock_username,
+                    password="mockpass",
+                    email="admin@example.com"
+                )
+
+            current_user = User.usersDb[mock_username]
+        else:
+            raise HTTPException(status_code=401, detail="Invalid session token")
 
 
     # check: movie exists
