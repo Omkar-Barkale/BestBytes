@@ -30,6 +30,12 @@ def load_all_movies() -> List[movie]:
     return movies
 
 # list all movies
+
+# DATA_PATH is correct
+# load_all_movies() function is working
+# The router is mounted correctly
+# Docker is mapping folder properly
+
 @router.get("/", response_model=List[movie])
 def get_all_movies():
     """Return all movies found in the /data directory."""
@@ -39,6 +45,11 @@ def get_all_movies():
     return movies
 
 # get movie details
+
+# The case-insensitive lookup is working.
+# The metadata file was found.
+# No incorrect validation issues.
+
 @router.get("/{title}", response_model=movie)
 def get_movie_by_title(title: str):
     """Return one movie by its folder name (case-insensitive)."""
@@ -55,6 +66,9 @@ def get_movie_by_title(title: str):
         return movie(**data)
 
 # add review
+
+# only works if user logs in first, otherwise will not add a review
+
 @router.post("/{title}/review", response_model=movieReviews)
 def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str):
     """Add a review"""
