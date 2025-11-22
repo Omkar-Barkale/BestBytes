@@ -68,6 +68,7 @@ def get_movie_by_title(title: str):
 # add review
 
 # only works if user logs in first, otherwise will not add a review
+#created mock user for successful test
 
 @router.post("/{title}/review", response_model=movieReviews)
 def add_review(title: str, review_data: movieReviewsCreate, sessionToken: str):
