@@ -191,7 +191,7 @@ class User:
                 return True
             return False
     
-    @staticmethod
+
     def getCurrentUser(cls, sessionToken: str) -> Optional['User']:
         """Get currently logged-in user from session token"""
         with cls._lock:  # Thread-safe operation
